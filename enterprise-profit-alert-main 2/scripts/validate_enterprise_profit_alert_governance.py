@@ -109,7 +109,20 @@ def validate_delivery_receipt(receipt: dict[str, Any], *, alert_count: int,
         require(receipt.get("would_send") is (alert_count > 0),
                 "dry-run would-send decision mismatch")
         return
-    require(delivery_mode == "production", "unsupported delivery mode")
+    require(delivery_mode in ("production", "test"), "unsupported delivery mode")
+    if delivery_mode == "test":
+        require(receipt.get("execution_mode") == "test", "test receipt mode mismatch")
+    if "expected_recipients" in receipt:
+        expected = receipt["expected_recipients"]
+        evidence = receipt.get("deliveries") or []
+        require(len(expected) == len(set(expected)) and len(evidence) == len(expected),
+                "recipient evidence count mismatch")
+        require(sorted(item.get("recipientId", "") for item in evidence) == sorted(expected),
+                "recipient evidence scope mismatch")
+        require(receipt.get("message_count") == len(expected), "message count mismatch")
+        require(all(item.get("state") == "VERIFIED" and item.get("readbackConfirmed") is True
+                    and item.get("messageId") and item.get("deliveryId") for item in evidence),
+                "per-recipient verification missing")
     if alert_count == 0:
         require(receipt.get("delivery_status") == "NO_SEND_NO_BUSINESS_ALERT",
                 "zero-alert run delivery state mismatch")
@@ -161,7 +174,7 @@ def validate_output(output_dir: Path, rules_path: Path, rules: dict[str, Any],
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", type=Path)
-    parser.add_argument("--delivery-mode", choices=("production", "dry-run"),
+    parser.add_argument("--delivery-mode", choices=("production", "dry-run", "test"),
                         default="production")
     args = parser.parse_args()
     pointer, rules_path, rules = validate_active(ROOT)
