@@ -2,6 +2,8 @@
 import hashlib
 import hmac
 import json
+import os
+from urllib.parse import urlsplit
 import time
 import uuid
 from urllib.request import Request, urlopen
@@ -33,11 +35,24 @@ class ApiError(RuntimeError):
 
 
 class Client:
-    def __init__(self, url, key, secret, timeout=120, transport=None):
-        if not url.startswith('https://') and transport is None:
-            raise ValueError('HTTPS required')
+    def __init__(self, url, key, secret, timeout=120, transport=None, allow_http=False):
+        parsed = urlsplit(url)
+        if (parsed.scheme not in ('https', 'http') or not parsed.hostname
+                or parsed.username is not None or parsed.password is not None
+                or parsed.path not in ('', '/') or parsed.query or parsed.fragment):
+            raise ValueError('agent-task URL must be an origin without path, credentials, query or fragment')
+        if parsed.scheme != 'https' and transport is None and not allow_http:
+            raise ValueError('HTTPS required; explicitly allow HTTP only on a trusted internal network')
+        if not key or not secret:
+            raise ValueError('agent-task identity and HMAC secret are required')
         self.url, self.key, self.secret = url.rstrip('/'), key, secret
         self.timeout, self.transport = timeout, transport
+
+    @classmethod
+    def from_env(cls):
+        return cls(os.environ['PROFIT_API_URL'], os.environ['PROFIT_API_KEY'],
+                   os.environ['PROFIT_API_SECRET'],
+                   allow_http=os.environ.get('PROFIT_API_ALLOW_HTTP', 'false').lower() == 'true')
 
     def call(self, endpoint, payload):
         path, body = BASE + endpoint, canonical(payload)

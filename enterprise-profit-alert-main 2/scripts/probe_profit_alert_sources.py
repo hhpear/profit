@@ -62,7 +62,7 @@ def main():
     required=('PROFIT_API_URL','PROFIT_API_KEY','PROFIT_API_SECRET')
     missing=[key for key in required if not os.environ.get(key)]
     if missing: parser.error('missing environment configuration: '+', '.join(missing))
-    report=probe(Client(*(os.environ[key] for key in required)),args.data_day,args.output_dir)
+    report=probe(Client.from_env(),args.data_day,args.output_dir)
     print(json.dumps(report,ensure_ascii=False))
 
 if __name__=='__main__': main()

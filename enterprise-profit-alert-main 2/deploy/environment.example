@@ -3,3 +3,6 @@
 PROFIT_API_URL=https://REPLACE_WITH_APPROVED_AGENT_TASK
 PROFIT_API_KEY=REPLACE_WITH_SERVICE_IDENTITY
 PROFIT_API_SECRET=REPLACE_WITH_SECRET
+# Default false. Set true only for direct HTTP on a trusted internal network,
+# e.g. PROFIT_API_URL=http://yuexin-bmp-agent-task:8080 (same as Java Runtime).
+PROFIT_API_ALLOW_HTTP=false

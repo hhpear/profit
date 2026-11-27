@@ -1,0 +1,12 @@
+# Activate with --spring.profiles.active=profit-test.
+# The secret must match Python PROFIT_API_SECRET; never put its value in this file.
+agent:
+  task:
+    agent-principals: ${AGENT_TASK_AGENT_PRINCIPALS:customer-billing-agent,profit-alert-test}
+    principal-secrets:
+      profit-alert-test: ${PROFIT_AGENT_TEST_HMAC_SECRET}
+
+profit:
+  identities:
+    profit-alert-test:
+      mode: test

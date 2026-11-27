@@ -203,7 +203,7 @@ def main():
     parser.add_argument('--recipient',action='append',default=[])
     parser.add_argument('--sender-app')
     args=parser.parse_args()
-    client=Client(os.environ['PROFIT_API_URL'],os.environ['PROFIT_API_KEY'],os.environ['PROFIT_API_SECRET'])
+    client=Client.from_env()
     execute(client,args.state_dir,args.data_day,args.mode,args.previous_history,args.recipient,sender_app=args.sender_app)
 
 if __name__=='__main__': main()

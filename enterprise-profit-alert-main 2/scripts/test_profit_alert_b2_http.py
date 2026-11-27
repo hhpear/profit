@@ -2,20 +2,13 @@
 import os
 import json
 import unittest
-from urllib.request import Request,urlopen
-from urllib.error import HTTPError
 from scripts.profit_alert_http import Client,ApiError,digest
 
 @unittest.skipUnless(os.environ.get('PROFIT_B2_LOOPBACK_PORT'), 'run via Java PythonHttpContractTest')
 class JavaHttpTest(unittest.TestCase):
     def setUp(self):
         port=int(os.environ['PROFIT_B2_LOOPBACK_PORT'])
-        def transport(path,body,headers):
-            try:
-                with urlopen(Request(f'http://127.0.0.1:{port}'+path,body,headers),timeout=10) as response:
-                    return response.status,json.load(response)
-            except HTTPError as error:return error.code,json.load(error)
-        self.client=Client('https://loopback.test','synthetic-worker','synthetic-secret',transport=transport)
+        self.client=Client(f'http://127.0.0.1:{port}','synthetic-worker','synthetic-secret',allow_http=True)
     def test_real_source_service_domestic_and_international(self):
         from scripts.profit_alert_b1 import domestic
         from scripts.fetch_enterprise_profit_alert_pigeon import validate
