@@ -8,7 +8,7 @@ from pathlib import Path
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--maven',default='mvn')
 args=parser.parse_args()
-root=Path(__file__).resolve().parents[1]
+root=Path(__file__).resolve().parents[2]
 notice=next(root.glob('yuexin-platform-notice-master-*'))
 with tempfile.TemporaryDirectory(prefix='notice-b2-') as directory:
     work=Path(directory)
