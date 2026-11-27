@@ -95,7 +95,9 @@ def execute(client, root, day, mode, previous, recipients, release='b1', sender_
             if date.fromisoformat(day) >= datetime.now(ZoneInfo('Asia/Shanghai')).date(): raise ValueError('incomplete day')
             if mode != 'dry-run' and (not recipients or len(set(recipients)) != len(recipients) or not sender_app):
                 raise ValueError('explicit unique recipients and sender app required')
-            binding = digest({'assume_notice_success': assume_notice_success, 'accept_notice_queue': accept_notice_queue, 'rules': pointer['ruleset_sha256'], 'recipients': recipients, 'release': release, 'sender': sender_app})
+            binding_fields = {'assume_notice_success': assume_notice_success, 'rules': pointer['ruleset_sha256'], 'recipients': recipients, 'release': release, 'sender': sender_app}
+            if accept_notice_queue: binding_fields['accept_notice_queue'] = True
+            binding = digest(binding_fields)
             existing = db.execute('SELECT stage,binding FROM runs WHERE day=? AND mode=?', (day,mode)).fetchone()
             if existing and existing[1] != binding: raise RuntimeError('run binding conflict')
             db.execute('INSERT OR IGNORE INTO runs (day,mode,stage,binding,error) VALUES (?,?,?,?,NULL)', (day,mode,'VALIDATING',binding)); db.commit()
@@ -178,6 +180,8 @@ def execute(client, root, day, mode, previous, recipients, release='b1', sender_
                         if result.get('state') == 'QUEUED':
                             if (not accept_notice_queue or result.get('deliveryMode') != 'NOTICE_QUEUE'
                                     or result.get('noticeAccepted') is not True or result.get('sendAttempted') is not True
+                                    or result.get('noticeApp') != sender_app
+                                    or result.get('transport') != 'NOTICE_DUBBO'
                                     or result.get('assumedSuccess') is not False
                                     or result.get('readbackConfirmed') is not False or result.get('messageId') is not None
                                     or not result.get('deliveryId')):
