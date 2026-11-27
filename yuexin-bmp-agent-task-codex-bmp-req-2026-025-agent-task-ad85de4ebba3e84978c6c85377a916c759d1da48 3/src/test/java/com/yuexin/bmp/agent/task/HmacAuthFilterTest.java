@@ -23,6 +23,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class HmacAuthFilterTest {
     @Autowired private MockMvc mockMvc;
+    @Autowired private AgentTaskProperties properties;
+
+    @Test
+    void profitPrincipalCannotBeChangedAfterSigning() throws Exception {
+        properties.getPrincipalSecrets().put("profit-a","a-secret");
+        properties.getPrincipalSecrets().put("profit-b","b-secret");
+        properties.getAgentPrincipals().add("profit-a");properties.getAgentPrincipals().add("profit-b");
+        try {
+            String path="/internal/profit-alert/v1/domestic/query",body="{}";
+            String time=String.valueOf(Instant.now().getEpochSecond()),nonce=UUID.randomUUID().toString();
+            mockMvc.perform(post(path).contentType(MediaType.APPLICATION_JSON).content(body)
+              .header("X-Request-Id","a1-test").header("X-Agent-Key","profit-b")
+              .header("X-Agent-Timestamp",time).header("X-Agent-Nonce",nonce)
+              .header("X-Agent-Signature",sign("POST",path,time,nonce,body,"a-secret")))
+              .andExpect(status().isUnauthorized())
+              .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.requestId").value("a1-test"));
+        } finally {properties.getPrincipalSecrets().clear();properties.getAgentPrincipals().remove("profit-a");properties.getAgentPrincipals().remove("profit-b");}
+    }
 
     @Test
     void profitEndpointRejectsLegacySharedKey() throws Exception {

@@ -16,4 +16,25 @@ class ProfitSourceServiceTest {
  @Test void successfulInternationalReceiptIsReusedAcrossInstances(){g.intl=receipt();Map<String,Object>r=Collections.singletonMap("dataDay","2021-01-01");s.international(r);new ProfitSourceService(db,new ObjectMapper(),p,g).international(r);assertEquals(1,g.calls);}
  @Test void badTimezoneAndSourceAreNotRetried(){g.intl=receipt();g.intl.put("start_time","2021-01-01T00:00:00Z");Map<String,Object>r=Collections.singletonMap("dataDay","2021-01-01");assertThrows(SourceException.class,()->s.international(r));assertThrows(SourceException.class,()->s.international(r));assertEquals(1,g.calls);}
  @Test void transportBudgetSurvivesNewServiceInstance(){ProfitSourceGateway bad=new ProfitSourceGateway(){public Map<String,Object>domesticPage(Map<String,Object>q){return null;}public Map<String,Object>internationalDay(String d){throw new SourceException("SOURCE_UNAVAILABLE",503,true);}};for(int i=0;i<4;i++){ProfitSourceService next=new ProfitSourceService(db,new ObjectMapper(),p,bad);assertThrows(SourceException.class,()->next.international(Collections.singletonMap("dataDay","2021-01-01")));}assertEquals(3,db.queryForObject("SELECT attempts FROM profit_international_day",Integer.class));}
+ @Test void malformedRequestsAre400BeforeCallingSource(){
+  List<Map<String,Object>> cases=new ArrayList<>();
+  Map<String,Object>r=request();r.put("customerTypes","Customer");cases.add(r);
+  r=request();r.put("customerTypes",Arrays.asList("Customer","QuasiCustomer","Agent","CHANNEL","Customer"));cases.add(r);
+  r=request();r.put("page",Arrays.asList(1));cases.add(r);
+  for(Object number:Arrays.asList("1",1.5d,Long.MAX_VALUE,0,-1)){r=request();r.put("page",Collections.singletonMap("number",number));cases.add(r);}
+  r=request();r.put("queryId",42);cases.add(r);
+  r=request();r.put("startDate","2021-1-1");cases.add(r);
+  r=request();r.put("taxBasis","EXCLUDED");cases.add(r);
+  for(Map<String,Object>bad:cases){SourceException e=assertThrows(SourceException.class,()->s.domestic(bad));assertEquals(400,e.httpStatus);assertEquals("INVALID_ARGUMENT",e.code);}
+  assertEquals(0,g.calls);
+ }
+ @Test void frozenReceiptCannotBeReadByDifferentPrincipal(){
+  p.setMappingConfirmed(true);p.setStableReadConfirmed(true);p.setCustomerIds(Collections.singletonList(1L));p.setEnterpriseNames(Collections.singletonMap("ENT","Enterprise"));
+  Map<String,Object>r=request();r.put("ownerPrincipal","alice");Map<String,Object>one=s.domestic(r);r.put("queryId",one.get("queryId"));r.put("ownerPrincipal","bob");
+  assertEquals(409,assertThrows(SourceException.class,()->s.domestic(r)).httpStatus);assertEquals(1,g.calls);
+ }
+ @Test void invalidInternationalDateDoesNotConsumeBudget(){
+  assertEquals(400,assertThrows(SourceException.class,()->s.international(Collections.singletonMap("dataDay",42))).httpStatus);
+  assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM profit_international_day",Integer.class));
+ }
 }

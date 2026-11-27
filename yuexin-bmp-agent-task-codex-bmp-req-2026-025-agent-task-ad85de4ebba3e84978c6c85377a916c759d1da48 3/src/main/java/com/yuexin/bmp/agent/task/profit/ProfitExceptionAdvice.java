@@ -8,6 +8,7 @@ public class ProfitExceptionAdvice {
  @ExceptionHandler(Exception.class) public ResponseEntity<Map<String,Object>> error(Exception e,HttpServletRequest r){
   String code="SOURCE_UNAVAILABLE";int status=503;boolean retry=true;
   if(e instanceof ProfitApiException){code=((ProfitApiException)e).code;status=((ProfitApiException)e).status;retry=status>=500;}
+  else if(e instanceof org.springframework.http.converter.HttpMessageNotReadableException || e instanceof IllegalArgumentException || e instanceof ClassCastException){code="INVALID_ARGUMENT";status=400;retry=false;}
   else try {code=String.valueOf(e.getClass().getField("code").get(e));status=((Number)e.getClass().getField("httpStatus").get(e)).intValue();retry=(Boolean)e.getClass().getField("retryable").get(e);}catch(Exception ignored){}
   Map<String,Object> b=new LinkedHashMap<>();b.put("code",code);b.put("message",code);b.put("requestId",r.getAttribute("profit.requestId"));b.put("retryable",retry);return ResponseEntity.status(status).body(b);
  }

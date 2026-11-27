@@ -36,6 +36,7 @@ public class HmacAuthFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
+        response.setHeader("X-Request-Id", request.getHeader("X-Request-Id")==null?"":request.getHeader("X-Request-Id"));
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         byte[] chunk = new byte[4096];
         int read;
@@ -137,7 +138,10 @@ public class HmacAuthFilter extends OncePerRequestFilter {
             response.setStatus(status);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-            response.getWriter().write("{\"code\":\"" + (status==401?"UNAUTHENTICATED":status==403?"FORBIDDEN":"INVALID_ARGUMENT") + "\",\"message\":\""+message.replace("\"", "'")+"\",\"retryable\":false}");
+            java.util.Map<String,Object> body = new java.util.LinkedHashMap<>();
+            body.put("code", status==401?"UNAUTHENTICATED":status==403?"FORBIDDEN":status>=500?"SOURCE_UNAVAILABLE":"INVALID_ARGUMENT");
+            body.put("message", message); body.put("requestId", response.getHeader("X-Request-Id")); body.put("retryable", status>=500);
+            response.getWriter().write(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(body));
         } catch (IOException ignored) {
             // Response is already committed or unavailable.
         }
