@@ -1,0 +1,35 @@
+--- a/yuexin-platform-notice-master-7b26bef9e18f59b43ecc5472ea378f45ef9bceb5/yuexin-platform-notice-service/src/main/java/com/yuexin/platform/notice/service/impl/ReliableFeishuNoticeServiceImpl.java
++++ b/yuexin-platform-notice-master-7b26bef9e18f59b43ecc5472ea378f45ef9bceb5/yuexin-platform-notice-service/src/main/java/com/yuexin/platform/notice/service/impl/ReliableFeishuNoticeServiceImpl.java
+@@ -103,7 +103,13 @@
+  public Map<String,Object> readback(String id){
+   List<Map<String,Object>> rows=jdbc.queryForList("SELECT * FROM notice_delivery WHERE delivery_id=?",id);
+   if(rows.size()!=1)throw error("NOT_FOUND","delivery"); Map<String,Object> row=rows.get(0);
+-  if("VERIFIED".equals(row.get("state")))return publicRecord(row);
++  if("VERIFIED".equals(row.get("state"))){
++   Map<String,Object> original=JSON.parseObject(String.valueOf(row.get("request_json")));
++   Map<String,Object> verified=publicRecord(row);
++   verified.put("contentMatch","EXACT");
++   verified.put("senderAppId",app(original).getAppId());
++   return verified;
++  }
+   if(!"SENT".equals(row.get("state")))throw error("SOURCE_UNAVAILABLE","message not confirmed sent");
+   Map<String,Object> r=JSON.parseObject(String.valueOf(row.get("request_json")));Application a=app(r);
+   try{
+--- a/yuexin-platform-notice-master-7b26bef9e18f59b43ecc5472ea378f45ef9bceb5/yuexin-platform-notice-service/src/test/java/com/yuexin/platform/notice/service/impl/ReliableDeliveryTests.java
++++ b/yuexin-platform-notice-master-7b26bef9e18f59b43ecc5472ea378f45ef9bceb5/yuexin-platform-notice-service/src/test/java/com/yuexin/platform/notice/service/impl/ReliableDeliveryTests.java
+@@ -29,5 +29,15 @@
+   assertTrue(assertThrows(IllegalArgumentException.class,()->svc.submit(other)).getMessage().startsWith("IDEMPOTENCY_CONFLICT"));
+   Map<String,Object> read=new HashMap<>();read.put("deliveryId","dl-existing");read.put("ownerPrincipal","other");
+   assertTrue(assertThrows(IllegalArgumentException.class,()->svc.readbackOwned(read)).getMessage().startsWith("FORBIDDEN"));
++  jdbc.update("UPDATE notice_delivery SET state='VERIFIED',message_id='synthetic-message',chat_id='synthetic-chat' WHERE delivery_id='dl-existing'");
++  read.put("ownerPrincipal","caller");
++  for(int i=0;i<2;i++){
++   Map<String,Object> verified=svc.readbackOwned(read);
++   assertEquals("VERIFIED",verified.get("state"));
++   assertEquals("EXACT",verified.get("contentMatch"));
++   assertEquals("test-app",verified.get("senderAppId"));
++   assertEquals("synthetic-message",verified.get("messageId"));
++  }
++
+  }
+ }
