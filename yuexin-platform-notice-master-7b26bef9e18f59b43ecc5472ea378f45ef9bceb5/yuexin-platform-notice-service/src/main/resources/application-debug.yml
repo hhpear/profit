@@ -1,0 +1,22 @@
+spring:
+  redis:
+    database: 0
+    host: 192.168.12.246
+    password:
+    port: 6379
+
+dubbo:
+  registry:
+    protocol: zookeeper
+    address: zookeeper://192.168.12.243:2181
+    register: true
+
+app-config:
+  feishu-apps:
+    - noticeApp: BusinessAlarm
+      appId: cli_a37fd143077c100b
+      appSecret: vuJDRqO7x4gqLlCi6KJVoftbDcw83AUN
+    - noticeApp: BMP
+      appId: cli_a4ef5bde0c38100b
+      appSecret: PXdHa3DjGq6ROqcXouuVMb2DkfDHL2Gc
+  screen-notice-url: http://47.92.142.75:80

@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  profiles:
+    active: debug
+  application:
+    name: yuexin-bmp-bi-business-service
+dubbo:
+  application:
+    name: yuexin-bmp-bi-business-service
+    shutwait: 10000
+  protocol:
+    port: -1
+    name: dubbo
+  scan:
+    base-packages: com.yuexin.bmp.bi.business.service.impl
+  provider:
+    timeout: 10000
+    retries: 0
+    validation: true
+  consumer:
+    timeout: 10000
+    validation: false
+    # 关闭所有依赖服务的启动时检查(否则没有可用服务提供者时报错)
+    check: false
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    call-setters-on-nulls: true

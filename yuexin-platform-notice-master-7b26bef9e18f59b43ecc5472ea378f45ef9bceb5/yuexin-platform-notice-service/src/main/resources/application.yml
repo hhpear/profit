@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: yuexin-platform-notice-service
+  profiles:
+    active: local
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+dubbo:
+  application:
+    name: yuexin-platform-notice-service
+    shutwait: 10000
+  protocol:
+    port: -1
+    name: dubbo
+  scan:
+    base-packages: com.yuexin.platform.notice.service.impl
+  provider:
+    validation: false
+    timeout: 10000
+  consumer:
+    validation: false
+    timeout: 5000
+    check: false

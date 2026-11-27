@@ -1,0 +1,24 @@
+dubbo:
+  registry:
+    address: zookeeper://192.168.12.244:2181
+    protocol: zookeeper
+
+spring:
+  datasource:
+    url: jdbc:mysql://192.168.12.246:3306/yuexin-bmp-dev?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: 4321vcxz
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    # root日志以info级别输出
+    root: info
+    # 此包下所有class以debug级别输出
+    com.yuexin.bmp.bi.business: info
+  nchan:
+    url: http://localhost:8303/pub/logs?app=yuexin-bmp-bi-business-service
+    enable: true
