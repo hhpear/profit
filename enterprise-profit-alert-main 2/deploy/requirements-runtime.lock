@@ -1,0 +1,2 @@
+# Company HTTP scheduled-job path uses Python standard library only.
+# No third-party packages. Legacy direct MCP/DeerFlow entrypoints are excluded.

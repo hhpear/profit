@@ -1,0 +1,5 @@
+# Copy outside repository to /etc/profit-alert/environment, mode 0600.
+# Obtain actual values from the company service owner; never commit credentials.
+PROFIT_API_URL=https://REPLACE_WITH_APPROVED_AGENT_TASK
+PROFIT_API_KEY=REPLACE_WITH_SERVICE_IDENTITY
+PROFIT_API_SECRET=REPLACE_WITH_SECRET

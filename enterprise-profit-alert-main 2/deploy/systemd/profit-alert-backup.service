@@ -1,0 +1,9 @@
+[Unit]
+Description=Consistent profit alert backup
+OnFailure=profit-alert-notify@%n.service
+[Service]
+Type=oneshot
+User=profit
+WorkingDirectory=/opt/profit-alert
+ExecStart=/opt/profit-alert/venv/bin/python -m scripts.profit_alert_ops backup --state-dir /var/lib/profit-alert --archive-root /var/backups/profit-alert
+UMask=0077

@@ -1,0 +1,8 @@
+[Unit]
+Description=Independent daily completion check
+[Timer]
+OnCalendar=*-*-* 09:00:00 Asia/Shanghai
+Persistent=true
+Unit=profit-alert-watch.service
+[Install]
+WantedBy=timers.target

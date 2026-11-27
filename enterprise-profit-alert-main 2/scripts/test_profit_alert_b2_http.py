@@ -16,9 +16,40 @@ class JavaHttpTest(unittest.TestCase):
                     return response.status,json.load(response)
             except HTTPError as error:return error.code,json.load(error)
         self.client=Client('https://loopback.test','synthetic-worker','synthetic-secret',transport=transport)
+    def test_real_source_service_domestic_and_international(self):
+        from scripts.profit_alert_b1 import domestic
+        from scripts.fetch_enterprise_profit_alert_pigeon import validate
+        from scripts.run_enterprise_profit_alert_daily import active_operating_rules
+        from scripts.validate_enterprise_profit_alert_governance import read
+        data=domestic(self.client,'2026-11-26','2026-11-26')
+        self.assertEqual([row['profit'] for row in data['rows']],['20.00','20.00'])
+        detail=domestic(self.client,'2026-11-26','2026-11-26',True)
+        self.assertEqual(detail['pagination']['total'],2)
+        for _ in range(2):
+            result=self.client.call('/international/daily',{'dataDay':'2026-11-26'})
+            validate(result['receipt'],'2026-11-26',read(active_operating_rules()))
+        request=dict(startDate='2026-11-26',endDate='2026-11-26',customerTypes=['Customer','QuasiCustomer','Agent','CHANNEL'],taxBasis='INCLUDED',indicatorView='OPERATING',page={'number':1,'size':1})
+        first=self.client.call('/domestic/query',request)
+        with self.assertRaises(ApiError) as changed:
+            self.client.call('/domestic/query',{**request,'queryId':first['queryId'],'endDate':'2026-11-25'})
+        self.assertEqual(changed.exception.status,400)
+        with self.assertRaises(ApiError) as missing:
+            self.client.call('/domestic/query',{**request,'queryId':'expired-or-missing'})
+        self.assertEqual(missing.exception.status,409)
+
+    def test_readonly_source_probe(self):
+        from tempfile import TemporaryDirectory
+        from pathlib import Path
+        from scripts.probe_profit_alert_sources import probe
+        with TemporaryDirectory() as directory:
+            result=probe(self.client,'2026-11-26',Path(directory)/'evidence')
+            self.assertEqual(result['status'],'SOURCE_CHECKS_PASSED')
+            self.assertFalse(result['delivery_attempted'])
+            self.assertFalse(result['business_equivalence_confirmed'])
+
     def test_signature_authorization_conflict_and_recovery(self):
         c=self.client
-        request=dict(startDate='2026-11-26',endDate='2026-11-26',page={'number':1,'size':1},queryId=None)
+        request=dict(startDate='2026-11-26',endDate='2026-11-26',page={'number':1,'size':1},queryId=None,customerTypes=['Customer','QuasiCustomer','Agent','CHANNEL'],taxBasis='INCLUDED',indicatorView='OPERATING')
         one=c.call('/domestic/query',request)
         two=c.call('/domestic/query',{**request,'queryId':one['queryId'],'page':{'number':2,'size':1}})
         self.assertEqual(one['queryId'],two['queryId'])

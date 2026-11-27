@@ -1,0 +1,8 @@
+[Unit]
+Description=Profit alert at 08:00 Shanghai
+[Timer]
+OnCalendar=*-*-* 08:00:00 Asia/Shanghai
+Persistent=true
+Unit=profit-alert.service
+[Install]
+WantedBy=timers.target

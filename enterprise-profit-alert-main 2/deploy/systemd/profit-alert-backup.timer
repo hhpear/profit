@@ -1,0 +1,8 @@
+[Unit]
+Description=Daily profit alert backup
+[Timer]
+OnCalendar=*-*-* 09:15:00 Asia/Shanghai
+Persistent=true
+Unit=profit-alert-backup.service
+[Install]
+WantedBy=timers.target

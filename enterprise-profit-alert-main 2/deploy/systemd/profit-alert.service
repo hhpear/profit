@@ -1,0 +1,17 @@
+[Unit]
+Description=Daily profit alert (dry-run until integration accepted)
+After=network-online.target
+Wants=network-online.target
+OnFailure=profit-alert-notify@%n.service
+[Service]
+Type=oneshot
+User=profit
+WorkingDirectory=/opt/profit-alert
+EnvironmentFile=/etc/profit-alert/environment
+ExecStart=/opt/profit-alert/venv/bin/python -m scripts.profit_alert_ops run --state-dir /var/lib/profit-alert --mode dry-run --timeout 1800
+TimeoutStartSec=1900
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/profit-alert

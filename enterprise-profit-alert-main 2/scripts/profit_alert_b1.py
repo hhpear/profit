@@ -69,6 +69,8 @@ def select_history(root, day, mode, version):
 
 def execute(client, root, day, mode, previous, recipients, release='b1', sender_app=None):
     root = Path(root).resolve()
+    if (root / 'RESTORE_REQUIRES_RECONCILIATION.json').exists():
+        raise Pending('restored state requires reconciliation before execution')
     root.mkdir(parents=True, exist_ok=True)
     with (root / 'workflow.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)

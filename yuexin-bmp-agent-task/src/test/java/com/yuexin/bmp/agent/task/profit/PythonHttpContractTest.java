@@ -38,14 +38,26 @@ class PythonHttpContractTest {
    if("readbackOwned".equals(method)){result.put("state","VERIFIED");result.put("senderAppId","synthetic-app");result.put("contentMatch","EXACT");result.put("readbackConfirmed",true);}
    return result;
   };
-  com.yuexin.bmp.agent.task.profit.source.ProfitSourceService sources=org.mockito.Mockito.mock(com.yuexin.bmp.agent.task.profit.source.ProfitSourceService.class);
-  org.mockito.Mockito.when(sources.domestic(org.mockito.ArgumentMatchers.anyMap())).thenAnswer(inv->{
-   Map<String,Object> request=inv.getArgument(0);Map<String,Object> page=(Map<String,Object>)request.get("page");
-   int n=((Number)page.get("number")).intValue();
-   Map<String,Object> result=new LinkedHashMap<>();result.put("queryId","synthetic-frozen");result.put("success",true);result.put("code","GB:0000");result.put("totalCount",2);result.put("pageNumber",n);result.put("pageSize",1);
-   result.put("data",Collections.singletonList(Collections.singletonMap("entName",n==1?"合成一":"合成二")));
-   result.put("meta",Collections.singletonMap("consistency","FROZEN_RECEIPT"));return result;
-  });
+  org.springframework.jdbc.core.JdbcTemplate db=new org.springframework.jdbc.core.JdbcTemplate(new org.springframework.jdbc.datasource.DriverManagerDataSource("jdbc:h2:mem:"+UUID.randomUUID()+";MODE=MySQL;DB_CLOSE_DELAY=-1","sa",""));
+  db.execute("CREATE TABLE profit_source_receipt(receipt_id VARCHAR(64) PRIMARY KEY,binding_hash VARCHAR(64),payload LONGTEXT,expires_at TIMESTAMP)");
+  db.execute("CREATE TABLE profit_international_day(data_day VARCHAR(10) PRIMARY KEY,attempts INT,state VARCHAR(20),payload LONGTEXT,raw_response LONGTEXT)");
+  db.execute("CREATE TABLE profit_source_attempt(data_day VARCHAR(10),attempt_no INT,state VARCHAR(30),raw_response LONGTEXT,PRIMARY KEY(data_day,attempt_no))");
+  com.yuexin.bmp.agent.task.profit.source.SourceProperties sourceProps=new com.yuexin.bmp.agent.task.profit.source.SourceProperties();
+  sourceProps.setMappingConfirmed(true);sourceProps.setStableReadConfirmed(true);sourceProps.setCustomerIds(Collections.singletonList(1L));
+  Map<String,String> names=new HashMap<>();names.put("E1","合成一");names.put("E2","合成二");sourceProps.setEnterpriseNames(names);
+  java.util.concurrent.atomic.AtomicInteger sourceCalls=new java.util.concurrent.atomic.AtomicInteger();
+  com.yuexin.bmp.agent.task.profit.source.ProfitSourceGateway gateway=new com.yuexin.bmp.agent.task.profit.source.ProfitSourceGateway(){
+   public Map<String,Object> domesticPage(Map<String,Object> params){
+    List<Map<String,Object>> rows=new ArrayList<>();
+    long from=((Number)params.get("startTime")).longValue(), until=((Number)params.get("endTime")).longValue();
+    for(long day=from;day<until;day+=86400000L)for(int i=1;i<=2;i++){Map<String,Object> row=new HashMap<>();row.put("id",day+i);row.put("time",day);row.put("entCode","E"+i);row.put("smsIncome","100.00");row.put("smsOperateProfit","20.00");rows.add(row);}
+    Map<String,Object> result=new HashMap<>();result.put("data",rows);result.put("totalCount",rows.size());return result;
+   }
+   public Map<String,Object> internationalDay(String day){
+    sourceCalls.incrementAndGet();Map<String,Object> receipt=new HashMap<>();receipt.put("source_platform","Pigeon");receipt.put("start_time",day+"T00:00:00+08:00");receipt.put("end_time",day+"T23:59:59+08:00");receipt.put("group_by",Arrays.asList("enterprise_id","account_id","send_channel_id"));receipt.put("truncated",false);receipt.put("row_count",0);receipt.put("rows",Collections.emptyList());return receipt;
+   }
+  };
+  com.yuexin.bmp.agent.task.profit.source.ProfitSourceService sources=new com.yuexin.bmp.agent.task.profit.source.ProfitSourceService(db,new ObjectMapper(),sourceProps,gateway);
   MockMvc mvc=standaloneSetup(new ProfitAlertController(sources,notice,env)).setControllerAdvice(new ProfitExceptionAdvice()).addFilters(new HmacAuthFilter(props)).build();
   HttpServer server=HttpServer.create(new InetSocketAddress("127.0.0.1",0),0);
   server.createContext("/",exchange->{try{
@@ -61,6 +73,7 @@ class PythonHttpContractTest {
    process.environment().put("PROFIT_B2_LOOPBACK_PORT",Integer.toString(server.getAddress().getPort()));
    process.inheritIO();Process child=process.start();
    assertTrue(child.waitFor(60,java.util.concurrent.TimeUnit.SECONDS));assertEquals(0,child.exitValue());
+   assertEquals(1,sourceCalls.get(),"same international day must reuse persisted receipt");
   }finally{server.stop(0);}
  }
 }
