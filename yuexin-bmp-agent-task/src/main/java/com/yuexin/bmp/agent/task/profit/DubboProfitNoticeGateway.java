@@ -1,29 +1,51 @@
 package com.yuexin.bmp.agent.task.profit;
-import java.util.*;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.yuexin.bmp.agent.task.profit.source.ProfitSourceService;
 import org.springframework.stereotype.Component;
-import org.springframework.core.env.Environment;
+import org.springframework.jdbc.core.JdbcTemplate;
+import java.util.*;
+
+/** Temporary assumed-success implementation: no external send or readback occurs. */
 @Component
 public class DubboProfitNoticeGateway implements ProfitNoticeGateway {
- private final Environment env;
- public DubboProfitNoticeGateway(Environment env){this.env=env;}
- @SuppressWarnings("unchecked") public Map<String,Object> invoke(String method,Object argument){
-  String url=env.getProperty("profit.notice.url");
-  if(url==null || !url.startsWith("dubbo://")) throw new ProfitApiException("SOURCE_UNAVAILABLE",503);
-  Object ref=null;
-  try {
-   Class<?> rc=Class.forName("org.apache.dubbo.config.ReferenceConfig"); ref=rc.newInstance();
-   Class<?> ac=Class.forName("org.apache.dubbo.config.ApplicationConfig");Object app=ac.getConstructor(String.class).newInstance("profit-alert-notice");rc.getMethod("setApplication",ac).invoke(ref,app);
-   rc.getMethod("setTimeout",Integer.class).invoke(ref,Integer.valueOf(25000));
-   rc.getMethod("setInterface",String.class).invoke(ref,"com.yuexin.platform.notice.service.ReliableFeishuNoticeService");
-   rc.getMethod("setGeneric",String.class).invoke(ref,"true"); rc.getMethod("setUrl",String.class).invoke(ref,url);
-   rc.getMethod("setRetries",Integer.class).invoke(ref,Integer.valueOf(0));
-   Object service=rc.getMethod("get").invoke(ref);
-   return (Map<String,Object>)Class.forName("org.apache.dubbo.rpc.service.GenericService").getMethod("$invoke",String.class,String[].class,Object[].class).invoke(service,method,new String[]{argument instanceof Map?"java.util.Map":"java.lang.String"},new Object[]{argument});
-  }catch(Exception e){
-   String message=String.valueOf(e); Throwable cause=e; while(cause.getCause()!=null){cause=cause.getCause();message+=" "+cause;}
-   for(String code:Arrays.asList("IDEMPOTENCY_CONFLICT","INVALID_ARGUMENT","FORBIDDEN","NOT_FOUND","SOURCE_UNAVAILABLE")) if(message.contains(code))throw new ProfitApiException(code,"IDEMPOTENCY_CONFLICT".equals(code)?409:"INVALID_ARGUMENT".equals(code)?400:"FORBIDDEN".equals(code)?403:"NOT_FOUND".equals(code)?404:503);
-   throw new ProfitApiException("UPSTREAM_TIMEOUT",504);
-  }
-  finally {if(ref!=null)try{ref.getClass().getMethod("destroy").invoke(ref);}catch(Exception ignored){}}
+ private final JdbcTemplate db;
+ private final ObjectMapper json;
+ public DubboProfitNoticeGateway(JdbcTemplate db,ObjectMapper json){this.db=db;this.json=json;}
+ private String encode(Object value){try{return json.writeValueAsString(value);}catch(Exception e){throw new ProfitApiException("INVALID_ARGUMENT",400);}}
+ @SuppressWarnings("unchecked") private Map<String,Object> decode(String value){try{return json.readValue(value,Map.class);}catch(Exception e){throw new IllegalStateException(e);}}
+ private String required(Map<String,Object> r,String key){Object v=r.get(key);if(!(v instanceof String)||((String)v).trim().isEmpty())throw new ProfitApiException("INVALID_ARGUMENT",400);return (String)v;}
+ private Map<String,Object> find(String column,String value){
+  List<String> rows=db.query("SELECT payload FROM profit_assumed_delivery WHERE "+column+"=?",(rs,n)->rs.getString(1),value);
+  if(rows.isEmpty())throw new ProfitApiException("NOT_FOUND",404);return decode(rows.get(0));
  }
+ @SuppressWarnings("unchecked") public Map<String,Object> invoke(String method,Object argument){
+  if("query".equals(method))return find("idempotency_key",(String)argument);
+  Map<String,Object> request=(Map<String,Object>)argument;
+  if("readbackOwned".equals(method)){
+   Map<String,Object> record=find("delivery_id",required(request,"deliveryId"));
+   if(!Objects.equals(record.get("ownerPrincipal"),request.get("ownerPrincipal")))throw new ProfitApiException("FORBIDDEN",403);
+   return record;
+  }
+  if(!"submit".equals(method))throw new ProfitApiException("INVALID_ARGUMENT",400);
+  String key=required(request,"idempotencyKey");
+  List<String> slot=new ArrayList<>();for(String field:Arrays.asList("application","dataDay","mode","recipientId"))slot.add(required(request,field));
+  try{java.time.LocalDate.parse(slot.get(1));}catch(Exception e){throw new ProfitApiException("INVALID_ARGUMENT",400);}
+  if(!(request.get("card") instanceof Map))throw new ProfitApiException("INVALID_ARGUMENT",400);
+  for(String field:Arrays.asList("rulesetVersion","rulesetSha256","inputSha256","cardSha256"))required(request,field);
+  String slotHash=ProfitSourceService.hash(encode(slot));
+  // Binding includes actual card and trusted receiver, not just caller-supplied digests.
+  String binding=ProfitSourceService.hash(encode(canonical(request)));
+  Map<String,Object> record=new LinkedHashMap<>(request);record.remove("card");
+  record.put("deliveryId","assumed-"+UUID.randomUUID());record.put("state","SENT");
+  record.put("messageId",null);record.put("chatId",null);record.put("readbackConfirmed",false);
+  record.put("assumedSuccess",true);record.put("deliveryMode","ASSUMED_SUCCESS_NO_SEND");record.put("binding",binding);
+  try{db.update("INSERT INTO profit_assumed_delivery(slot_hash,idempotency_key,delivery_id,payload) VALUES(?,?,?,?)",slotHash,key,record.get("deliveryId"),encode(record));return record;}
+  catch(org.springframework.dao.DuplicateKeyException e){
+   List<String> rows=db.query("SELECT payload FROM profit_assumed_delivery WHERE slot_hash=? OR idempotency_key=?",(rs,n)->rs.getString(1),slotHash,key);
+   if(rows.size()!=1)throw new ProfitApiException("IDEMPOTENCY_CONFLICT",409);
+   Map<String,Object> old=decode(rows.get(0));if(!binding.equals(old.get("binding")))throw new ProfitApiException("IDEMPOTENCY_CONFLICT",409);return old;
+  }
+ }
+ private Object canonical(Object value){if(value instanceof Map){Map<String,Object> sorted=new TreeMap<>();((Map<?,?>)value).forEach((k,v)->sorted.put(k.toString(),canonical(v)));return sorted;}if(value instanceof List){List<Object> out=new ArrayList<>();for(Object v:(List<?>)value)out.add(canonical(v));return out;}return value;}
 }

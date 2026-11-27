@@ -5,4 +5,5 @@
                                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
     <include file="classpath:db/changelog/V1__agent_task_tables.xml"/>
     <include file="classpath:db/changelog/V2_profit_sources.xml"/>
+    <include file="classpath:db/changelog/V3_profit_assumed_delivery.xml"/>
 </databaseChangeLog>

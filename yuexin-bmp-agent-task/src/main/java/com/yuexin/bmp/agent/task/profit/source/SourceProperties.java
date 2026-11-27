@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 @Component @ConfigurationProperties("profit.source")
 public class SourceProperties {
- private boolean mappingConfirmed,stableReadConfirmed; private String mcpUrl="https://flux-admin.yuexin.cn/mcp/",mcpToken="",dubboRegistry="",dubboVersion="",dubboGroup="";
+ private boolean mappingConfirmed,stableReadConfirmed; private String mcpUrl="http://106.14.207.126:8000",mcpToken="",dubboRegistry="",dubboVersion="",dubboGroup="";
  private List<Long> customerIds=new ArrayList<>(); private Map<String,String> enterpriseNames=new HashMap<>();
  public boolean isMappingConfirmed(){return mappingConfirmed;} public void setMappingConfirmed(boolean x){mappingConfirmed=x;}
  public boolean isStableReadConfirmed(){return stableReadConfirmed;} public void setStableReadConfirmed(boolean x){stableReadConfirmed=x;}

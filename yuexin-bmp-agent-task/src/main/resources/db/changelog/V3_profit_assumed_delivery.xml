@@ -1,0 +1,4 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+<changeSet id="profit-assumed-delivery-v1" author="codex"><sql>
+CREATE TABLE profit_assumed_delivery (slot_hash VARCHAR(64) PRIMARY KEY, idempotency_key VARCHAR(255) NOT NULL UNIQUE, delivery_id VARCHAR(64) NOT NULL UNIQUE, payload LONGTEXT NOT NULL);
+</sql></changeSet></databaseChangeLog>
