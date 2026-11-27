@@ -69,7 +69,11 @@ class PythonHttpContractTest {
   server.start();
   try{
    ProcessBuilder process=new ProcessBuilder("python3","-m","scripts.test_profit_alert_b2_http");
-   process.directory(Paths.get("..","enterprise-profit-alert-main 2").toFile());
+   java.nio.file.Path pythonProject = Paths.get(System.getProperty("profit.python.project", "../yuexin-profit-runtime"));
+   if (!java.nio.file.Files.isDirectory(pythonProject)) {
+    pythonProject = Paths.get("..", "enterprise-profit-alert-main 2");
+   }
+   process.directory(pythonProject.toFile());
    process.environment().put("PROFIT_B2_LOOPBACK_PORT",Integer.toString(server.getAddress().getPort()));
    process.inheritIO();Process child=process.start();
    assertTrue(child.waitFor(60,java.util.concurrent.TimeUnit.SECONDS));assertEquals(0,child.exitValue());

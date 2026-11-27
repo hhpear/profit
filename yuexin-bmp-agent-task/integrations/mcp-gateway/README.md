@@ -12,7 +12,7 @@ set -a
 set +a
 ```
 
-首次授权使用 `yuexin-mcp-connect/scripts/mcp_gateway_client.py login`，指定网关地址、`--task-key profit-test --port 18765` 和同一个 `--credentials-file` 路径。需本人在飞书页面完成授权。完成后可在加载上述环境的终端执行 `"$PROFIT_MCP_PYTHON" "$PROFIT_MCP_BRIDGE" 2026-11-26` 验证国际来源；输出包含真实客户事实，只保存到授权目录。环境模板见本目录 `environment.example`，本地路径不可直接用于服务器。
+首次授权在 agent-task 根目录使用 `python3 integrations/mcp-gateway/mcp_gateway_client.py login`，指定网关地址、`--task-key profit-test --port 18765` 和同一个 `--credentials-file` 路径。需本人在飞书页面完成授权。完成后可在加载上述环境的终端执行 `"$PROFIT_MCP_PYTHON" "$PROFIT_MCP_BRIDGE" 2026-11-26` 验证国际来源；输出包含真实客户事实，只保存到授权目录。环境模板见本目录 `environment.example`，本地路径不可直接用于服务器。
 
 Java 构建：`mvn -Pprofit-dubbo clean package`。国际适配在 agent-task 容器内启动 Python 3.11+ 短进程，使用同目录内随包提供的网关客户端。不需要安装 MCP SDK，也不依赖开发机绝对路径；部署时把本 integrations 目录一同复制到镜像。
 
