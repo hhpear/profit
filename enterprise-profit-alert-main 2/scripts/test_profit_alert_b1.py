@@ -39,6 +39,51 @@ class WorkflowTest(unittest.TestCase):
         service.transport=transport
         return service
 
+    def queued_service(self):
+        service=MockService()
+        original=service.transport
+        def transport(path,body,headers):
+            if path.endswith('/deliveries/readback'):
+                raise AssertionError('Notice queue has no readback')
+            status,envelope=original(path,body,headers)
+            if status==200 and path in (BASE+'/deliveries',BASE+'/deliveries/query'):
+                envelope['data'].update(state='QUEUED',noticeAccepted=True,sendAttempted=True,
+                                        assumedSuccess=False,deliveryMode='NOTICE_QUEUE',
+                                        messageId=None,readbackConfirmed=False)
+            return status,envelope
+        service.transport=transport
+        return service
+
+    def test_notice_queue_is_real_submission_without_claiming_readback(self):
+        service=self.queued_service()
+        c=Client('https://synthetic.invalid','synthetic','synthetic-secret',transport=service.transport)
+        for _ in range(2):
+            receipt=execute(c,self.root/'state','2026-11-26','test',self.previous,['a'],
+                            sender_app='BusinessAlarm',accept_notice_queue=True)
+            self.assertTrue(receipt['send_attempted'])
+            self.assertFalse(receipt['message_readback_confirmed'])
+            self.assertFalse(receipt['assumedSuccess'])
+            self.assertEqual('NOTICE_ACCEPTED_UNCONFIRMED',receipt['delivery_status'])
+            self.assertEqual('QUEUED',receipt['deliveries'][0]['state'])
+        self.assertEqual(service.sent,['a'])
+
+    def test_notice_queue_requires_explicit_acceptance(self):
+        with self.assertRaises(Pending):self.run_workflow(self.queued_service())
+
+    def test_notice_unknown_is_not_accepted_as_queue_success(self):
+        service=self.queued_service()
+        original=service.transport
+        def unknown(path,body,headers):
+            status,envelope=original(path,body,headers)
+            if status==200 and path.endswith('/deliveries/query'):
+                envelope['data']['state']='UNKNOWN'
+            return status,envelope
+        c=Client('https://synthetic.invalid','synthetic','synthetic-secret',transport=unknown)
+        with self.assertRaises(Pending):
+            execute(c,self.root/'state','2026-11-26','test',self.previous,['a'],
+                    sender_app='BusinessAlarm',accept_notice_queue=True)
+        self.assertEqual(service.sent,['a'])
+
     def test_assumed_notice_completes_without_readback_and_reuses_record(self):
         service=self.assumed_service()
         c=Client('https://synthetic.invalid','synthetic','synthetic-secret',transport=service.transport)

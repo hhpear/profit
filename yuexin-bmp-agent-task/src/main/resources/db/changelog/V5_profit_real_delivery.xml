@@ -1,0 +1,14 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+<changeSet id="profit-real-delivery-v1" author="codex"><sql>
+CREATE TABLE profit_real_delivery (
+slot_hash VARCHAR(64) PRIMARY KEY,
+idempotency_key VARCHAR(255) NOT NULL UNIQUE,
+delivery_id VARCHAR(64) NOT NULL UNIQUE,
+owner_principal VARCHAR(255) NOT NULL,
+binding_hash VARCHAR(64) NOT NULL,
+state VARCHAR(20) NOT NULL,
+payload LONGTEXT NOT NULL,
+result LONGTEXT,
+error_code VARCHAR(64)
+);
+</sql></changeSet></databaseChangeLog>

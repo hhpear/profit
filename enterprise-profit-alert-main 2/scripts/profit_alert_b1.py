@@ -67,7 +67,7 @@ def select_history(root, day, mode, version):
     return max(candidates)[1]
 
 
-def execute(client, root, day, mode, previous, recipients, release='b1', sender_app=None, assume_notice_success=False):
+def execute(client, root, day, mode, previous, recipients, release='b1', sender_app=None, assume_notice_success=False, accept_notice_queue=False):
     root = Path(root).resolve()
     if (root / 'RESTORE_REQUIRES_RECONCILIATION.json').exists():
         raise Pending('restored state requires reconciliation before execution')
@@ -86,14 +86,16 @@ def execute(client, root, day, mode, previous, recipients, release='b1', sender_
                 db.execute('UPDATE runs SET stage=?,error=? WHERE day=? AND mode=?', (value,error,day,mode)); db.commit()
             pointer, rules_path, rules = validate_active()
             if mode not in ('dry-run', 'test', 'production'): raise ValueError('invalid mode')
+            if assume_notice_success and accept_notice_queue:
+                raise ValueError('placeholder and real Notice modes cannot be combined')
             if assume_notice_success and mode != 'test':
                 raise ValueError('temporary assumed notice is supported in test mode only')
-            if mode != 'dry-run' and client.transport is None and not assume_notice_success:
+            if mode != 'dry-run' and client.transport is None and not (assume_notice_success or accept_notice_queue):
                 raise ValueError('B1 enables simulated delivery only; company rules and recipient authorization require B2')
             if date.fromisoformat(day) >= datetime.now(ZoneInfo('Asia/Shanghai')).date(): raise ValueError('incomplete day')
             if mode != 'dry-run' and (not recipients or len(set(recipients)) != len(recipients) or not sender_app):
                 raise ValueError('explicit unique recipients and sender app required')
-            binding = digest({'assume_notice_success': assume_notice_success, 'rules': pointer['ruleset_sha256'], 'recipients': recipients, 'release': release, 'sender': sender_app})
+            binding = digest({'assume_notice_success': assume_notice_success, 'accept_notice_queue': accept_notice_queue, 'rules': pointer['ruleset_sha256'], 'recipients': recipients, 'release': release, 'sender': sender_app})
             existing = db.execute('SELECT stage,binding FROM runs WHERE day=? AND mode=?', (day,mode)).fetchone()
             if existing and existing[1] != binding: raise RuntimeError('run binding conflict')
             db.execute('INSERT OR IGNORE INTO runs (day,mode,stage,binding,error) VALUES (?,?,?,?,NULL)', (day,mode,'VALIDATING',binding)); db.commit()
@@ -173,8 +175,16 @@ def execute(client, root, day, mode, previous, recipients, release='b1', sender_
                             result = client.call('/deliveries/query',{'idempotencyKey':key})
                         for field in ('application','dataDay','mode','recipientId','rulesetSha256','inputSha256','cardSha256'):
                             if result.get(field)!=payload[field]: raise Pending('delivery binding mismatch')
-                        if result['state'] not in ('SENT','VERIFIED'): raise Pending('delivery unresolved: '+result['state'])
-                        if result.get('assumedSuccess') is True:
+                        if result.get('state') == 'QUEUED':
+                            if (not accept_notice_queue or result.get('deliveryMode') != 'NOTICE_QUEUE'
+                                    or result.get('noticeAccepted') is not True or result.get('sendAttempted') is not True
+                                    or result.get('assumedSuccess') is not False
+                                    or result.get('readbackConfirmed') is not False or result.get('messageId') is not None
+                                    or not result.get('deliveryId')):
+                                raise Pending('unexpected Notice queue result')
+                        elif result.get('state') not in ('SENT','VERIFIED'):
+                            raise Pending('delivery unresolved: '+str(result.get('state')))
+                        elif result.get('assumedSuccess') is True:
                             if (not assume_notice_success or result.get('deliveryMode') != 'ASSUMED_SUCCESS_NO_SEND'
                                     or result.get('readbackConfirmed') is not False or result.get('messageId') is not None
                                     or not result.get('deliveryId')):
@@ -191,12 +201,18 @@ def execute(client, root, day, mode, previous, recipients, release='b1', sender_
                         db.execute('INSERT OR REPLACE INTO deliveries VALUES (?,?,?,?)',(day,mode,recipient,json.dumps(result))); db.commit()
                         evidence.append(result)
                     assumed = any(item.get('assumedSuccess') is True for item in evidence)
-                    receipt.update(message_count=len(evidence),message_readback_confirmed=not assumed,deliveries=evidence,expected_recipients=recipients)
+                    queued = any(item.get('state') == 'QUEUED' for item in evidence)
+                    if queued and not all(item.get('state') == 'QUEUED' for item in evidence):
+                        raise Pending('mixed delivery assurance requires reconciliation')
+                    receipt.update(message_count=len(evidence),message_readback_confirmed=not (assumed or queued),deliveries=evidence,expected_recipients=recipients)
+                    if queued:
+                        receipt.update(delivery_status='NOTICE_ACCEPTED_UNCONFIRMED',notice_queue_accepted=True,
+                                       send_attempted=True,assumedSuccess=False)
                     if assumed:
                         receipt.update(delivery_status='ASSUMED_SUCCESS_NO_SEND',assumedSuccess=True,send_attempted=False)
                 atomic_write(out/f'enterprise-profit-alert-delivery-{mode}.json',receipt)
                 validate_output(out,rules_path,rules,delivery_mode=mode)
-                atomic_write(out/'enterprise-profit-alert-run.json',dict(status='SUCCESS',current_day=day,execution_mode=mode,ruleset_version=rules['version'],release=release,input_sha256=digest(history),assumed_notice_success=receipt.get('assumedSuccess',False)))
+                atomic_write(out/'enterprise-profit-alert-run.json',dict(status='SUCCESS',current_day=day,execution_mode=mode,ruleset_version=rules['version'],release=release,input_sha256=digest(history),assumed_notice_success=receipt.get('assumedSuccess',False),notice_queue_accepted=receipt.get('notice_queue_accepted',False)))
                 stage('SUCCESS')
                 return receipt
             except Exception as error:
@@ -214,8 +230,9 @@ def main():
     parser.add_argument('--recipient',action='append',default=[])
     parser.add_argument('--sender-app')
     parser.add_argument('--assume-notice-success',action='store_true',help='Test only: accept explicit task placeholder receipts without real send/readback')
+    parser.add_argument('--accept-notice-queue',action='store_true',help='Send via existing Notice; accept queue acknowledgement without Feishu delivery/readback confirmation')
     args=parser.parse_args()
     client=Client.from_env()
-    execute(client,args.state_dir,args.data_day,args.mode,args.previous_history,args.recipient,sender_app=args.sender_app,assume_notice_success=args.assume_notice_success)
+    execute(client,args.state_dir,args.data_day,args.mode,args.previous_history,args.recipient,sender_app=args.sender_app,assume_notice_success=args.assume_notice_success,accept_notice_queue=args.accept_notice_queue)
 
 if __name__=='__main__': main()

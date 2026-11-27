@@ -7,6 +7,14 @@ agent:
       profit-alert-test: ${PROFIT_AGENT_TEST_HMAC_SECRET}
 
 profit:
+  notice:
+    url: ${PROFIT_NOTICE_URL:}
+    registry: ${PROFIT_NOTICE_REGISTRY:}
+    app: ${PROFIT_NOTICE_APP:BusinessAlarm}
+    receive-id-type: user_id
+  recipients:
+    test:
+      test-recipient: ${PROFIT_NOTICE_TEST_USER_ID:}
   source:
     mcp-url: ${PROFIT_SOURCE_MCP_URL:http://106.14.207.126:8000}
   identities:
