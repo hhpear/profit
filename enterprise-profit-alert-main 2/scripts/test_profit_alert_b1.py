@@ -25,6 +25,41 @@ class WorkflowTest(unittest.TestCase):
     def tearDown(self):self.tmp.cleanup()
     def run_workflow(self,service,mode='test'):
         return execute(Client('https://synthetic.invalid','synthetic','synthetic-secret',transport=service.transport),self.root/'state','2026-11-26',mode,self.previous,['a','b','c'],sender_app='synthetic-app')
+    def assumed_service(self):
+        service=MockService()
+        original=service.transport
+        def transport(path,body,headers):
+            if path.endswith('/deliveries/readback'):
+                raise AssertionError('assumed notice must not read back')
+            status,envelope=original(path,body,headers)
+            if status==200 and path in (BASE+'/deliveries',BASE+'/deliveries/query'):
+                envelope['data'].update(assumedSuccess=True,deliveryMode='ASSUMED_SUCCESS_NO_SEND',
+                                        messageId=None,readbackConfirmed=False)
+            return status,envelope
+        service.transport=transport
+        return service
+
+    def test_assumed_notice_completes_without_readback_and_reuses_record(self):
+        service=self.assumed_service()
+        c=Client('https://synthetic.invalid','synthetic','synthetic-secret',transport=service.transport)
+        for _ in range(2):
+            receipt=execute(c,self.root/'state','2026-11-26','test',self.previous,['a'],
+                            sender_app='synthetic-app',assume_notice_success=True)
+            self.assertTrue(receipt['assumedSuccess'])
+            self.assertFalse(receipt['message_readback_confirmed'])
+            self.assertFalse(receipt['send_attempted'])
+            self.assertIsNone(receipt['deliveries'][0]['messageId'])
+        self.assertEqual(service.sent,['a'])
+
+    def test_assumed_notice_requires_explicit_option(self):
+        with self.assertRaises(Pending):self.run_workflow(self.assumed_service())
+
+    def test_assumed_notice_cannot_be_used_in_production(self):
+        c=Client('https://synthetic.invalid','synthetic','synthetic-secret',transport=MockService().transport)
+        with self.assertRaises(ValueError):
+            execute(c,self.root/'state','2026-11-26','production',self.previous,['a'],
+                    sender_app='synthetic-app',assume_notice_success=True)
+
     def test_test_mode_and_repeat(self):
         service=MockService(); result=self.run_workflow(service)
         self.assertEqual(result['message_count'],3)

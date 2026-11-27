@@ -4,6 +4,16 @@
 
 ## 服务部署
 
+本地测试配置已写入 agent-task 根目录 `.env.mcp.local`（Git 忽略、权限 0600），使用独立凭据文件 `~/.mcp-gateway/profit-test/credentials.json`，不覆盖默认个人凭据。启动 Java 前，在该目录用 bash 加载：
+
+```sh
+set -a
+. ./.env.mcp.local
+set +a
+```
+
+首次授权使用 `yuexin-mcp-connect/scripts/mcp_gateway_client.py login`，指定网关地址、`--task-key profit-test --port 18765` 和同一个 `--credentials-file` 路径。需本人在飞书页面完成授权。完成后可在加载上述环境的终端执行 `"$PROFIT_MCP_PYTHON" "$PROFIT_MCP_BRIDGE" 2026-11-26` 验证国际来源；输出包含真实客户事实，只保存到授权目录。环境模板见本目录 `environment.example`，本地路径不可直接用于服务器。
+
 Java 构建：`mvn -Pprofit-dubbo clean package`。国际适配在 agent-task 容器内启动 Python 3.11+ 短进程，使用同目录内随包提供的网关客户端。不需要安装 MCP SDK，也不依赖开发机绝对路径；部署时把本 integrations 目录一同复制到镜像。
 
 运行环境（实际路径由部署方填写）：
@@ -43,3 +53,7 @@ B 对接：国际 receipt 格式保持不变，meta.transport 变为 YUEXIN_GATE
 真实查询 2026-11-26：利润所需分组返回 185 行，truncated=false；真实响应通过 Java 日回执校验并保存/复用。离线测试覆盖 OAuth 包装解析、来源预算与缓存、占位恢复/幂等冲突/越权与无伪造回读。未发送真实飞书消息，未调用真实 BI。
 
 vendored mcp_gateway_client.py、mcp_gateway_core.py 来自本项目 yuexin-mcp-connect；后续协议升级需同步比对。
+
+## 当前本机授权验证（2026-11-27）
+
+本次独立 profit-test 凭据已完成 OAuth 登录；网关 `http://106.14.207.126:8000` 可达。当前登录账号的 tools/list 返回空列表，指定调用 `billing_mcp__query_daily_stats_summary` 返回 HTTP 403，error=permission_denied，stage=service_permission，trace_id=trace_227ab077a749442d8d8ae4efc20e1bf4。需要网关管理员为该账号配置服务及利润统计工具权限后重测；本次未取得国际日数据，不代表真实来源验收通过。凭据及响应文件仅在本机受限目录，不提交仓库。

@@ -7,6 +7,8 @@ agent:
       profit-alert-test: ${PROFIT_AGENT_TEST_HMAC_SECRET}
 
 profit:
+  source:
+    mcp-url: ${PROFIT_SOURCE_MCP_URL:http://106.14.207.126:8000}
   identities:
     profit-alert-test:
       mode: test

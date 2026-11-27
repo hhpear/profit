@@ -1,0 +1,7 @@
+# Inject these into the agent-task process. Adjust paths to the target machine.
+PROFIT_SOURCE_MCP_URL=http://106.14.207.126:8000
+MCP_GATEWAY_BASE_URL=http://106.14.207.126:8000
+PROFIT_MCP_PYTHON=/usr/bin/python3
+PROFIT_MCP_BRIDGE=/app/integrations/mcp-gateway/query_daily.py
+MCP_GATEWAY_CREDENTIALS_FILE=/run/secrets/mcp-gateway/credentials.json
+MCP_GATEWAY_TIMEOUT=100

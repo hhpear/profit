@@ -73,11 +73,14 @@ def check(root,mode,day):
     return 0,'SUCCESS'
 
 
-def run(root,mode,timeout,previous=None):
+def run(root,mode,timeout,previous=None,recipients=None,sender_app=None,assume_notice_success=False):
     root=Path(root)
     if (root/'RESTORE_REQUIRES_RECONCILIATION.json').exists():return 30
     command=[sys.executable,'-m','scripts.profit_alert_b1','--state-dir',str(root),'--mode',mode]
     if previous:command+=['--previous-history',str(previous)]
+    for recipient in recipients or []:command+=['--recipient',recipient]
+    if sender_app:command+=['--sender-app',sender_app]
+    if assume_notice_success:command+=['--assume-notice-success']
     try:
         child=subprocess.run(command,timeout=timeout)
         if child.returncode==0:return 0
@@ -97,6 +100,9 @@ def main():
     parser.add_argument('--data-day',default=(datetime.now(ZoneInfo('Asia/Shanghai')).date()-timedelta(days=1)).isoformat())
     parser.add_argument('--timeout',type=int,default=1800)
     parser.add_argument('--previous-history',type=Path)
+    parser.add_argument('--recipient',action='append',default=[])
+    parser.add_argument('--sender-app')
+    parser.add_argument('--assume-notice-success',action='store_true')
     args=parser.parse_args()
     if args.action=='backup':
         target=args.archive
@@ -109,6 +115,6 @@ def main():
         restore(args.archive,args.state_dir)
     elif args.action=='check':
         code,state=check(args.state_dir,args.mode,args.data_day);print(json.dumps({'data_day':args.data_day,'mode':args.mode,'state':state}));sys.exit(code)
-    else:sys.exit(run(args.state_dir,args.mode,args.timeout,args.previous_history))
+    else:sys.exit(run(args.state_dir,args.mode,args.timeout,args.previous_history,args.recipient,args.sender_app,args.assume_notice_success))
 
 if __name__=='__main__':main()

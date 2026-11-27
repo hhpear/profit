@@ -2,3 +2,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+
+# Local MCP authorization and machine-specific settings
+.env.mcp.local
+.mcp-gateway/

@@ -67,7 +67,7 @@ def select_history(root, day, mode, version):
     return max(candidates)[1]
 
 
-def execute(client, root, day, mode, previous, recipients, release='b1', sender_app=None):
+def execute(client, root, day, mode, previous, recipients, release='b1', sender_app=None, assume_notice_success=False):
     root = Path(root).resolve()
     if (root / 'RESTORE_REQUIRES_RECONCILIATION.json').exists():
         raise Pending('restored state requires reconciliation before execution')
@@ -86,12 +86,14 @@ def execute(client, root, day, mode, previous, recipients, release='b1', sender_
                 db.execute('UPDATE runs SET stage=?,error=? WHERE day=? AND mode=?', (value,error,day,mode)); db.commit()
             pointer, rules_path, rules = validate_active()
             if mode not in ('dry-run', 'test', 'production'): raise ValueError('invalid mode')
-            if mode != 'dry-run' and client.transport is None:
+            if assume_notice_success and mode != 'test':
+                raise ValueError('temporary assumed notice is supported in test mode only')
+            if mode != 'dry-run' and client.transport is None and not assume_notice_success:
                 raise ValueError('B1 enables simulated delivery only; company rules and recipient authorization require B2')
             if date.fromisoformat(day) >= datetime.now(ZoneInfo('Asia/Shanghai')).date(): raise ValueError('incomplete day')
             if mode != 'dry-run' and (not recipients or len(set(recipients)) != len(recipients) or not sender_app):
                 raise ValueError('explicit unique recipients and sender app required')
-            binding = digest({'rules': pointer['ruleset_sha256'], 'recipients': recipients, 'release': release, 'sender': sender_app})
+            binding = digest({'assume_notice_success': assume_notice_success, 'rules': pointer['ruleset_sha256'], 'recipients': recipients, 'release': release, 'sender': sender_app})
             existing = db.execute('SELECT stage,binding FROM runs WHERE day=? AND mode=?', (day,mode)).fetchone()
             if existing and existing[1] != binding: raise RuntimeError('run binding conflict')
             db.execute('INSERT OR IGNORE INTO runs (day,mode,stage,binding,error) VALUES (?,?,?,?,NULL)', (day,mode,'VALIDATING',binding)); db.commit()
@@ -172,20 +174,29 @@ def execute(client, root, day, mode, previous, recipients, release='b1', sender_
                         for field in ('application','dataDay','mode','recipientId','rulesetSha256','inputSha256','cardSha256'):
                             if result.get(field)!=payload[field]: raise Pending('delivery binding mismatch')
                         if result['state'] not in ('SENT','VERIFIED'): raise Pending('delivery unresolved: '+result['state'])
-                        stage('VERIFYING')
-                        key_delivery = result['deliveryId']
-                        result = client.call('/deliveries/readback',{'deliveryId':key_delivery})
-                        if (result.get('state')!='VERIFIED' or result.get('readbackConfirmed') is not True
-                            or result.get('deliveryId')!=key_delivery
-                            or result.get('recipientId')!=recipient or result.get('senderAppId')!=sender_app
-                            or result.get('contentMatch') not in ('EXACT','RENDERED_MARKERS') or not result.get('messageId')):
-                            raise Pending('readback mismatch')
+                        if result.get('assumedSuccess') is True:
+                            if (not assume_notice_success or result.get('deliveryMode') != 'ASSUMED_SUCCESS_NO_SEND'
+                                    or result.get('readbackConfirmed') is not False or result.get('messageId') is not None
+                                    or not result.get('deliveryId')):
+                                raise Pending('unexpected assumed notice result')
+                        else:
+                            stage('VERIFYING')
+                            key_delivery = result['deliveryId']
+                            result = client.call('/deliveries/readback',{'deliveryId':key_delivery})
+                            if (result.get('state')!='VERIFIED' or result.get('readbackConfirmed') is not True
+                                or result.get('deliveryId')!=key_delivery
+                                or result.get('recipientId')!=recipient or result.get('senderAppId')!=sender_app
+                                or result.get('contentMatch') not in ('EXACT','RENDERED_MARKERS') or not result.get('messageId')):
+                                raise Pending('readback mismatch')
                         db.execute('INSERT OR REPLACE INTO deliveries VALUES (?,?,?,?)',(day,mode,recipient,json.dumps(result))); db.commit()
                         evidence.append(result)
-                    receipt.update(message_count=len(evidence),message_readback_confirmed=True,deliveries=evidence,expected_recipients=recipients)
+                    assumed = any(item.get('assumedSuccess') is True for item in evidence)
+                    receipt.update(message_count=len(evidence),message_readback_confirmed=not assumed,deliveries=evidence,expected_recipients=recipients)
+                    if assumed:
+                        receipt.update(delivery_status='ASSUMED_SUCCESS_NO_SEND',assumedSuccess=True,send_attempted=False)
                 atomic_write(out/f'enterprise-profit-alert-delivery-{mode}.json',receipt)
                 validate_output(out,rules_path,rules,delivery_mode=mode)
-                atomic_write(out/'enterprise-profit-alert-run.json',dict(status='SUCCESS',current_day=day,execution_mode=mode,ruleset_version=rules['version'],release=release,input_sha256=digest(history)))
+                atomic_write(out/'enterprise-profit-alert-run.json',dict(status='SUCCESS',current_day=day,execution_mode=mode,ruleset_version=rules['version'],release=release,input_sha256=digest(history),assumed_notice_success=receipt.get('assumedSuccess',False)))
                 stage('SUCCESS')
                 return receipt
             except Exception as error:
@@ -202,8 +213,9 @@ def main():
     parser.add_argument('--mode',choices=['dry-run','test','production'],required=True)
     parser.add_argument('--recipient',action='append',default=[])
     parser.add_argument('--sender-app')
+    parser.add_argument('--assume-notice-success',action='store_true',help='Test only: accept explicit task placeholder receipts without real send/readback')
     args=parser.parse_args()
     client=Client.from_env()
-    execute(client,args.state_dir,args.data_day,args.mode,args.previous_history,args.recipient,sender_app=args.sender_app)
+    execute(client,args.state_dir,args.data_day,args.mode,args.previous_history,args.recipient,sender_app=args.sender_app,assume_notice_success=args.assume_notice_success)
 
 if __name__=='__main__': main()

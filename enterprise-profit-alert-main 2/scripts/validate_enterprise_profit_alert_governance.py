@@ -112,6 +112,24 @@ def validate_delivery_receipt(receipt: dict[str, Any], *, alert_count: int,
     require(delivery_mode in ("production", "test"), "unsupported delivery mode")
     if delivery_mode == "test":
         require(receipt.get("execution_mode") == "test", "test receipt mode mismatch")
+    if receipt.get("assumedSuccess") is True:
+        require(delivery_mode == "test" and receipt.get("execution_mode") == "test",
+                "assumed notice is test only")
+        require(receipt.get("delivery_status") == "ASSUMED_SUCCESS_NO_SEND"
+                and receipt.get("send_attempted") is False
+                and receipt.get("message_readback_confirmed") is False,
+                "assumed notice must not claim real sending or readback")
+        expected, evidence = receipt.get("expected_recipients", []), receipt.get("deliveries", [])
+        require(bool(expected) and len(expected) == len(set(expected))
+                and len(evidence) == len(expected)
+                and sorted(item.get("recipientId", "") for item in evidence) == sorted(expected)
+                and receipt.get("message_count") == len(expected), "assumed recipient evidence mismatch")
+        require(all(item.get("assumedSuccess") is True
+                    and item.get("deliveryMode") == "ASSUMED_SUCCESS_NO_SEND"
+                    and item.get("state") == "SENT" and item.get("deliveryId")
+                    and item.get("messageId") is None and item.get("readbackConfirmed") is False
+                    for item in evidence), "invalid assumed notice evidence")
+        return
     if "expected_recipients" in receipt:
         expected = receipt["expected_recipients"]
         evidence = receipt.get("deliveries") or []
