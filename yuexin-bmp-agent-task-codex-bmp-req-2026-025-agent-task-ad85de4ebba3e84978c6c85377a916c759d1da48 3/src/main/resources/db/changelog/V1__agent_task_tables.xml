@@ -1,0 +1,167 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ns0:databaseChangeLog xmlns:ns0="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog                                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+    <ns0:changeSet id="agent_task_tables" author="liuhao">
+        <ns0:createTable tableName="agent_policy">
+            <ns0:column name="id" type="BIGINT" autoIncrement="true">
+                <ns0:constraints primaryKey="true" nullable="false" />
+            </ns0:column>
+            <ns0:column name="policy_no" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="version" type="INT">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="status" type="VARCHAR(32)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="process_type" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="agent_key" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="biz_type" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="bill_month" type="VARCHAR(7)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="rule_json" type="TEXT">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="approved_by" type="VARCHAR(64)" />
+            <ns0:column name="approved_at" type="TIMESTAMP" />
+            <ns0:column name="created_by" type="VARCHAR(64)" />
+            <ns0:column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+        </ns0:createTable>
+        <ns0:addUniqueConstraint tableName="agent_policy" columnNames="policy_no,version" />
+
+        <ns0:createTable tableName="agent_run">
+            <ns0:column name="id" type="BIGINT" autoIncrement="true">
+                <ns0:constraints primaryKey="true" nullable="false" />
+            </ns0:column>
+            <ns0:column name="run_id" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" unique="true" />
+            </ns0:column>
+            <ns0:column name="policy_id" type="BIGINT">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="policy_version" type="INT">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="policy_snapshot" type="TEXT">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="process_type" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="agent_key" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="biz_type" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="bill_month" type="VARCHAR(7)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="status" type="VARCHAR(32)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="grant_status" type="VARCHAR(32)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="grant_expires_at" type="TIMESTAMP" />
+            <ns0:column name="max_tasks" type="INT">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+        </ns0:createTable>
+        <ns0:addUniqueConstraint tableName="agent_run" columnNames="policy_id,bill_month,policy_version" />
+
+        <ns0:createTable tableName="agent_task">
+            <ns0:column name="id" type="BIGINT" autoIncrement="true">
+                <ns0:constraints primaryKey="true" nullable="false" />
+            </ns0:column>
+            <ns0:column name="task_id" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" unique="true" />
+            </ns0:column>
+            <ns0:column name="run_id" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="process_type" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="process_ref_id" type="BIGINT">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="agent_key" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="biz_type" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="biz_ref_id" type="BIGINT">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="state" type="VARCHAR(32)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="request_id" type="VARCHAR(64)" />
+            <ns0:column name="claim_token" type="VARCHAR(64)" />
+            <ns0:column name="snapshot_json" type="TEXT">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="result" type="VARCHAR(32)" />
+            <ns0:column name="fail_reason" type="VARCHAR(512)" />
+            <ns0:column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+        </ns0:createTable>
+        <ns0:addUniqueConstraint tableName="agent_task" columnNames="run_id,biz_ref_id" />
+
+        <ns0:createTable tableName="agent_task_event">
+            <ns0:column name="id" type="BIGINT" autoIncrement="true">
+                <ns0:constraints primaryKey="true" nullable="false" />
+            </ns0:column>
+            <ns0:column name="event_id" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" unique="true" />
+            </ns0:column>
+            <ns0:column name="task_id" type="VARCHAR(64)" />
+            <ns0:column name="run_id" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="process_ref_id" type="BIGINT" />
+            <ns0:column name="agent_key" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="event_type" type="VARCHAR(64)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="actor_type" type="VARCHAR(32)">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+            <ns0:column name="actor_id" type="VARCHAR(64)" />
+            <ns0:column name="decision_id" type="VARCHAR(64)" />
+            <ns0:column name="detail_json" type="TEXT" />
+            <ns0:column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <ns0:constraints nullable="false" />
+            </ns0:column>
+        </ns0:createTable>
+        <ns0:createIndex tableName="agent_task_event" indexName="idx_agent_event_process">
+            <ns0:column name="process_ref_id" />
+        </ns0:createIndex>
+        <ns0:createIndex tableName="agent_task_event" indexName="idx_agent_event_task">
+            <ns0:column name="task_id" />
+        </ns0:createIndex>
+    </ns0:changeSet>
+</ns0:databaseChangeLog>

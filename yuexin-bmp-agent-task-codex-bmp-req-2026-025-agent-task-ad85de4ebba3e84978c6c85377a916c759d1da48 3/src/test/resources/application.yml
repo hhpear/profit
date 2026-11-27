@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:agent_task_test;MODE=MySQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/master.xml
+
+agent:
+  task:
+    hmac-secret: test-secret
+    agent-principals: customer-billing-agent
+    admin-principals: bmp-admin
+    timestamp-window-seconds: 300
+    mail-mode: noop

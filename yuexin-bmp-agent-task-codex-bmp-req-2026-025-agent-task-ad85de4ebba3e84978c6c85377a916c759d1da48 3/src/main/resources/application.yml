@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: yuexin-bmp-agent-task
+  datasource:
+    url: ${AGENT_TASK_DB_URL}
+    username: ${AGENT_TASK_DB_USER}
+    password: ${AGENT_TASK_DB_PASSWORD}
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/master.xml
+
+agent:
+  task:
+    hmac-secret: ${AGENT_TASK_HMAC_SECRET:}
+    agent-principals: ${AGENT_TASK_AGENT_PRINCIPALS:customer-billing-agent}
+    admin-principals: ${AGENT_TASK_ADMIN_PRINCIPALS:bmp-admin}
+    timestamp-window-seconds: ${AGENT_TASK_TIMESTAMP_WINDOW_SECONDS:300}
+    mail-mode: ${AGENT_TASK_MAIL_MODE:noop}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
