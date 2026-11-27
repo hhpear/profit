@@ -47,7 +47,7 @@ public class ConfiguredSourceGateway implements ProfitSourceGateway {
    process=pb.start();
    if(!process.waitFor(120,java.util.concurrent.TimeUnit.SECONDS)){process.destroyForcibly();throw new SourceException("UPSTREAM_TIMEOUT",504,true);}
    Map<String,Object> result=mapper.readValue(output.toFile(),Map.class);
-   if(process.exitValue()!=0){Object status=result.get("status");if(Integer.valueOf(403).equals(status)||Integer.valueOf(401).equals(status))throw new SourceException("FORBIDDEN",403,false);throw new SourceException("SOURCE_UNAVAILABLE",503,false);}
+   if(process.exitValue()!=0){Object status=result.get("status");if(Integer.valueOf(401).equals(status))throw new SourceException("UNAUTHENTICATED",401,false);if(Integer.valueOf(403).equals(status))throw new SourceException("FORBIDDEN",403,false);if(Integer.valueOf(429).equals(status))throw new SourceException("RATE_LIMITED",429,true);throw new SourceException("SOURCE_UNAVAILABLE",503,Boolean.TRUE.equals(result.get("retryable")));}
    return result;
   }catch(SourceException e){throw e;}catch(InterruptedException e){Thread.currentThread().interrupt();throw new SourceException("SOURCE_UNAVAILABLE",503,true);}catch(Exception e){throw new SourceException("SOURCE_UNAVAILABLE",503,true);}
   finally{if(process!=null&&process.isAlive())process.destroyForcibly();if(output!=null)try{java.nio.file.Files.deleteIfExists(output);}catch(Exception ignored){}}

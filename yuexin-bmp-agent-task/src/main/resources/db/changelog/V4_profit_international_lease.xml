@@ -1,0 +1,9 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+<changeSet id="profit-international-lease-v1" author="codex">
+<addColumn tableName="profit_international_day">
+<column name="lease_token" type="VARCHAR(36)"/>
+<column name="lease_until" type="TIMESTAMP"/>
+<column name="error_code" type="VARCHAR(64)"/>
+<column name="error_status" type="INT"/>
+</addColumn>
+</changeSet></databaseChangeLog>

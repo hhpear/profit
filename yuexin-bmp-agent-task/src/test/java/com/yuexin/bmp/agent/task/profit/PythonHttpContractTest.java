@@ -40,7 +40,7 @@ class PythonHttpContractTest {
   };
   org.springframework.jdbc.core.JdbcTemplate db=new org.springframework.jdbc.core.JdbcTemplate(new org.springframework.jdbc.datasource.DriverManagerDataSource("jdbc:h2:mem:"+UUID.randomUUID()+";MODE=MySQL;DB_CLOSE_DELAY=-1","sa",""));
   db.execute("CREATE TABLE profit_source_receipt(receipt_id VARCHAR(64) PRIMARY KEY,binding_hash VARCHAR(64),payload LONGTEXT,expires_at TIMESTAMP)");
-  db.execute("CREATE TABLE profit_international_day(data_day VARCHAR(10) PRIMARY KEY,attempts INT,state VARCHAR(20),payload LONGTEXT,raw_response LONGTEXT)");
+  db.execute("CREATE TABLE profit_international_day(data_day VARCHAR(10) PRIMARY KEY,attempts INT,state VARCHAR(20),payload LONGTEXT,raw_response LONGTEXT,lease_token VARCHAR(36),lease_until TIMESTAMP,error_code VARCHAR(64),error_status INT)");
   db.execute("CREATE TABLE profit_source_attempt(data_day VARCHAR(10),attempt_no INT,state VARCHAR(30),raw_response LONGTEXT,PRIMARY KEY(data_day,attempt_no))");
   com.yuexin.bmp.agent.task.profit.source.SourceProperties sourceProps=new com.yuexin.bmp.agent.task.profit.source.SourceProperties();
   sourceProps.setMappingConfirmed(true);sourceProps.setStableReadConfirmed(true);sourceProps.setCustomerIds(Collections.singletonList(1L));

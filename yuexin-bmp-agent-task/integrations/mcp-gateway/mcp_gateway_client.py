@@ -1186,7 +1186,7 @@ def parse_jsonish(raw_body: str) -> Any:
     if not stripped:
         return None
     try:
-        return json.loads(stripped)
+        return json.loads(stripped, parse_float=str)
     except json.JSONDecodeError:
         return stripped
 

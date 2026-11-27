@@ -57,3 +57,5 @@ vendored mcp_gateway_client.py、mcp_gateway_core.py 来自本项目 yuexin-mcp-
 ## 当前本机授权验证（2026-11-27）
 
 本次独立 profit-test 凭据已完成 OAuth 登录；网关 `http://106.14.207.126:8000` 可达。当前登录账号的 tools/list 返回空列表，指定调用 `billing_mcp__query_daily_stats_summary` 返回 HTTP 403，error=permission_denied，stage=service_permission，trace_id=trace_227ab077a749442d8d8ae4efc20e1bf4。需要网关管理员为该账号配置服务及利润统计工具权限后重测；本次未取得国际日数据，不代表真实来源验收通过。凭据及响应文件仅在本机受限目录，不提交仓库。
+
+A3 恢复与部署更新：见 [国际 MCP 接入与恢复](../../docs/A3-国际MCP接入与恢复.md)，包含 V4 数据库迁移、租约/预算、连续日证据、凭据恢复及多实例限制。
