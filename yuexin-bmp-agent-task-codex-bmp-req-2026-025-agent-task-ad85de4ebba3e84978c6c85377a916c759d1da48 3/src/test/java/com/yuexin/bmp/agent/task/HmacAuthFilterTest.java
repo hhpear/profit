@@ -25,6 +25,17 @@ class HmacAuthFilterTest {
     @Autowired private MockMvc mockMvc;
 
     @Test
+    void profitEndpointRejectsLegacySharedKey() throws Exception {
+        String path="/internal/profit-alert/v1/domestic/query", body="{}";
+        String time=String.valueOf(Instant.now().getEpochSecond()), nonce=UUID.randomUUID().toString();
+        mockMvc.perform(post(path).contentType(MediaType.APPLICATION_JSON).content(body)
+          .header("X-Request-Id","test-request").header("X-Agent-Key","customer-billing-agent")
+          .header("X-Agent-Timestamp",time).header("X-Agent-Nonce",nonce)
+          .header("X-Agent-Signature",sign("POST",path,time,nonce,body,"test-secret")))
+          .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void rejectsInvalidSignature() throws Exception {
         mockMvc.perform(post("/internal/not-exist")
                         .contentType(MediaType.APPLICATION_JSON)

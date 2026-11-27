@@ -8,6 +8,9 @@ import java.util.Set;
 
 @ConfigurationProperties(prefix = "agent.task")
 public class AgentTaskProperties {
+    private java.util.Map<String,String> principalSecrets = new java.util.HashMap<>();
+    public java.util.Map<String,String> getPrincipalSecrets(){return principalSecrets;}
+    public void setPrincipalSecrets(java.util.Map<String,String> value){principalSecrets=value;}
     private String hmacSecret = "";
     private Set<String> agentPrincipals = new HashSet<>(Collections.singletonList("customer-billing-agent"));
     private Set<String> adminPrincipals = new HashSet<>(Collections.singletonList("bmp-admin"));

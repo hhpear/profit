@@ -1,0 +1,6 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+<changeSet id="profit-source-v1" author="codex"><sql>
+CREATE TABLE profit_source_receipt (receipt_id VARCHAR(64) PRIMARY KEY,binding_hash VARCHAR(64) NOT NULL,payload LONGTEXT NOT NULL,expires_at TIMESTAMP NOT NULL);
+CREATE TABLE profit_international_day (data_day VARCHAR(10) PRIMARY KEY,attempts INT NOT NULL,state VARCHAR(20) NOT NULL,payload LONGTEXT,raw_response LONGTEXT);
+CREATE TABLE profit_source_attempt (data_day VARCHAR(10) NOT NULL,attempt_no INT NOT NULL,state VARCHAR(30) NOT NULL,raw_response LONGTEXT,PRIMARY KEY(data_day,attempt_no));
+</sql></changeSet></databaseChangeLog>

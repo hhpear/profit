@@ -52,7 +52,14 @@ public class HmacAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (properties.getHmacSecret() == null || properties.getHmacSecret().isEmpty()) {
+        String secret = properties.getPrincipalSecrets().get(principal);
+        if (wrapped.getRequestURI().startsWith("/internal/profit-alert/")) {
+            if (secret == null || secret.isEmpty()) { reject(response,401,"UNAUTHENTICATED"); return; }
+            String requestId = wrapped.getHeader("X-Request-Id");
+            if(requestId==null || requestId.trim().isEmpty()){reject(response,400,"INVALID_ARGUMENT");return;}
+            wrapped.setAttribute("profit.requestId",requestId);
+        } else if(secret==null){ secret=properties.getHmacSecret(); }
+        if (secret == null || secret.isEmpty()) {
             reject(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "hmac secret is not configured");
             return;
         }
@@ -77,7 +84,7 @@ public class HmacAuthFilter extends OncePerRequestFilter {
             String canonical = wrapped.getMethod() + "\n" + wrapped.getRequestURI() + "\n" + timestamp + "\n"
                     + nonce + "\n" + toHex(bodyHash);
             Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(new SecretKeySpec(properties.getHmacSecret().getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
             byte[] expected = mac.doFinal(canonical.getBytes(StandardCharsets.UTF_8));
             byte[] actual = parseHex(signature);
             signatureValid = MessageDigest.isEqual(expected, actual);
@@ -112,6 +119,7 @@ public class HmacAuthFilter extends OncePerRequestFilter {
         }
 
         seenNonces.entrySet().removeIf(entry -> now - entry.getValue() > properties.getTimestampWindowSeconds());
+        wrapped.setAttribute("authenticatedPrincipal",principal);
         chain.doFilter(wrapped, response);
     }
 
@@ -129,7 +137,7 @@ public class HmacAuthFilter extends OncePerRequestFilter {
             response.setStatus(status);
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-            response.getWriter().write("{\"error\":\"" + message.replace("\"", "'") + "\"}");
+            response.getWriter().write("{\"code\":\"" + (status==401?"UNAUTHENTICATED":status==403?"FORBIDDEN":"INVALID_ARGUMENT") + "\",\"message\":\""+message.replace("\"", "'")+"\",\"retryable\":false}");
         } catch (IOException ignored) {
             // Response is already committed or unavailable.
         }
