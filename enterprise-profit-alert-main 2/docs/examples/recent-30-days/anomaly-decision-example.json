@@ -1,0 +1,19 @@
+{
+  "sample_type": "REDACTED_REAL_RUN_DECISION",
+  "data_day": "2026-11-18",
+  "result": {
+    "data_day": "2026-11-18",
+    "ruleset_version": "2026-11-06.1",
+    "final_state": "VALIDATED_SUCCESS",
+    "alert_count": 2,
+    "message_count": 4,
+    "delivery_status": "READBACK_CONFIRMED",
+    "had_failure_record": false,
+    "failure_category": null,
+    "alert_types": {
+      "ALERT_SUSTAINED_DECLINE": 2
+    }
+  },
+  "expected_behavior": "业务异常时只向规则授权的正式对象发送，并核对应用、接收人和消息内容；本例历史回执记录4条消息回读确认。",
+  "limitations": "客户身份与金额已全部移除；本文件不是计算输入，也不是可发送的飞书卡片。"
+}

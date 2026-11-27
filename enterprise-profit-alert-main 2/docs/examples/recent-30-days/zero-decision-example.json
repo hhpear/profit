@@ -1,0 +1,17 @@
+{
+  "sample_type": "REDACTED_REAL_RUN_DECISION",
+  "data_day": "2026-11-15",
+  "result": {
+    "data_day": "2026-11-15",
+    "ruleset_version": "2026-11-06.1",
+    "final_state": "VALIDATED_SUCCESS",
+    "alert_count": 0,
+    "message_count": 0,
+    "delivery_status": "NO_SEND_NO_BUSINESS_ALERT",
+    "had_failure_record": true,
+    "failure_category": "BMP_SESSION_EXPIRED",
+    "alert_types": {}
+  },
+  "expected_behavior": "运行成功但业务异常为0：不调用正式业务发送，message_count=0。",
+  "limitations": "客户身份与金额已全部移除；本文件不是计算输入，也不是可发送的飞书卡片。"
+}

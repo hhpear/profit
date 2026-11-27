@@ -1,0 +1,11 @@
+{
+  "checked_date": "2026-11-19",
+  "app_id": "cli_aaa38ddf53f8dbcf",
+  "app_name": "业财告警助手",
+  "create_source": "developer_console",
+  "creator_name": "寇誉博",
+  "owner_name": "寇誉博",
+  "creator_equals_owner": true,
+  "verification": "application/v6/applications read followed by contact/v3/users read using returned owner_id; no credential copied",
+  "handoff_interpretation": "Currently held by the creator personally; migrate ownership/credentials or replace with company-managed app during handoff. This does not establish legal asset ownership."
+}

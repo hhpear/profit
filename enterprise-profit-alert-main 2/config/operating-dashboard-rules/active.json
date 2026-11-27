@@ -1,0 +1,15 @@
+{
+  "schema_version": "1.0",
+  "ruleset_id": "operating-dashboard",
+  "status": "ACTIVE",
+  "active_version": "2026-08-27.2",
+  "ruleset_path": "config/operating-dashboard-rules/2026-08-27.2.json",
+  "ruleset_sha256": "64817267987c9e56f55451eb952b6bb151dec3681703dcb86f9c58650c605eb1",
+  "activation_id": "activate-WANGJIE-EMAIL-DELIVERY-20260827-2026-08-27.2",
+  "activated_at": "2026-08-27T10:32:00+08:00",
+  "approved_by": "user-requested-full-management-recipient",
+  "reason": "修正汪姐跨应用open_id并改用唯一企业邮箱投递",
+  "mode": "activate",
+  "history_policy": "NO_RESTATEMENT",
+  "previous_version": "2026-08-27.1"
+}

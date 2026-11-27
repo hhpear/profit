@@ -1,0 +1,381 @@
+{
+  "scope": "Existing local artifacts, no fresh source queries or message reread. Historical rule per day. No customer identity or financial amount included.",
+  "summary": {
+    "data_start": "2026-10-20",
+    "data_end": "2026-11-18",
+    "days": 30,
+    "successful_days": 26,
+    "alert_days": 16,
+    "zero_alert_days": 10,
+    "days_without_success_manifest": 4,
+    "validation_failed_days": 0,
+    "alert_events": 47,
+    "confirmed_message_count": 57,
+    "days_with_failure_record": 7
+  },
+  "days": [
+    {
+      "data_day": "2026-10-20",
+      "ruleset_version": "2026-09-30.2",
+      "final_state": "NO_SUCCESS_MANIFEST",
+      "alert_count": null,
+      "message_count": null,
+      "delivery_status": null,
+      "had_failure_record": true,
+      "failure_category": "PIGEON_TOOL_UNAVAILABLE"
+    },
+    {
+      "data_day": "2026-10-21",
+      "ruleset_version": "2026-09-30.2",
+      "final_state": "NO_SUCCESS_MANIFEST",
+      "alert_count": null,
+      "message_count": null,
+      "delivery_status": null,
+      "had_failure_record": true,
+      "failure_category": "PIGEON_TOOL_UNAVAILABLE"
+    },
+    {
+      "data_day": "2026-10-22",
+      "ruleset_version": "2026-09-30.2",
+      "final_state": "NO_SUCCESS_MANIFEST",
+      "alert_count": null,
+      "message_count": null,
+      "delivery_status": null,
+      "had_failure_record": true,
+      "failure_category": "PIGEON_TOOL_UNAVAILABLE"
+    },
+    {
+      "data_day": "2026-10-23",
+      "ruleset_version": "2026-09-30.2",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 0,
+      "message_count": 0,
+      "delivery_status": "NO_SEND_NO_BUSINESS_ALERT",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {}
+    },
+    {
+      "data_day": "2026-10-24",
+      "ruleset_version": "2026-09-30.2",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 0,
+      "message_count": 0,
+      "delivery_status": "NO_SEND_NO_BUSINESS_ALERT",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {}
+    },
+    {
+      "data_day": "2026-10-25",
+      "ruleset_version": "2026-09-30.2",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 0,
+      "message_count": 0,
+      "delivery_status": "NO_SEND_NO_BUSINESS_ALERT",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {}
+    },
+    {
+      "data_day": "2026-10-26",
+      "ruleset_version": "2026-09-30.2",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 1,
+      "message_count": 3,
+      "delivery_status": "READBACK_CONFIRMED",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {
+        "ALERT_SIGN_FLIP": 1
+      }
+    },
+    {
+      "data_day": "2026-10-27",
+      "ruleset_version": "2026-09-30.2",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 0,
+      "message_count": 0,
+      "delivery_status": "NO_SEND_NO_BUSINESS_ALERT",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {}
+    },
+    {
+      "data_day": "2026-10-28",
+      "ruleset_version": "2026-09-30.2",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 2,
+      "message_count": 3,
+      "delivery_status": "READBACK_CONFIRMED",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {
+        "ALERT_SUSTAINED_DECLINE": 2
+      }
+    },
+    {
+      "data_day": "2026-10-29",
+      "ruleset_version": "2026-09-30.2",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 1,
+      "message_count": 3,
+      "delivery_status": "READBACK_CONFIRMED",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {
+        "ALERT_SUSTAINED_DECLINE": 1
+      }
+    },
+    {
+      "data_day": "2026-10-30",
+      "ruleset_version": "2026-09-30.2",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 2,
+      "message_count": 3,
+      "delivery_status": "READBACK_CONFIRMED",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {
+        "ALERT_SIGN_FLIP": 1,
+        "ALERT_SUSTAINED_DECLINE": 1
+      }
+    },
+    {
+      "data_day": "2026-10-31",
+      "ruleset_version": "2026-09-30.2",
+      "final_state": "NO_SUCCESS_MANIFEST",
+      "alert_count": null,
+      "message_count": null,
+      "delivery_status": null,
+      "had_failure_record": true,
+      "failure_category": "BMP_SESSION_EXPIRED"
+    },
+    {
+      "data_day": "2026-11-01",
+      "ruleset_version": "2026-09-30.2",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 0,
+      "message_count": 0,
+      "delivery_status": "NO_SEND_NO_BUSINESS_ALERT",
+      "had_failure_record": true,
+      "failure_category": "BMP_SESSION_EXPIRED",
+      "alert_types": {}
+    },
+    {
+      "data_day": "2026-11-02",
+      "ruleset_version": "2026-09-30.2",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 6,
+      "message_count": 3,
+      "delivery_status": "READBACK_CONFIRMED",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {
+        "ALERT_SIGN_FLIP": 6
+      }
+    },
+    {
+      "data_day": "2026-11-03",
+      "ruleset_version": "2026-09-30.2",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 6,
+      "message_count": 3,
+      "delivery_status": "READBACK_CONFIRMED",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {
+        "ALERT_SUSTAINED_DECLINE": 5,
+        "ALERT_SIGN_FLIP": 1
+      }
+    },
+    {
+      "data_day": "2026-11-04",
+      "ruleset_version": "2026-09-30.2",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 4,
+      "message_count": 3,
+      "delivery_status": "READBACK_CONFIRMED",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {
+        "ALERT_SUSTAINED_DECLINE": 3,
+        "ALERT_SIGN_FLIP": 1
+      }
+    },
+    {
+      "data_day": "2026-11-05",
+      "ruleset_version": "2026-11-06.1",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 5,
+      "message_count": 4,
+      "delivery_status": "READBACK_CONFIRMED",
+      "had_failure_record": true,
+      "failure_category": "BMP_PAGE_SHAPE_INVALID",
+      "alert_types": {
+        "ALERT_SUSTAINED_DECLINE": 3,
+        "ALERT_SIGN_FLIP": 2
+      }
+    },
+    {
+      "data_day": "2026-11-06",
+      "ruleset_version": "2026-11-06.1",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 3,
+      "message_count": 4,
+      "delivery_status": "READBACK_CONFIRMED",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {
+        "ALERT_SIGN_FLIP": 1,
+        "ALERT_SUSTAINED_DECLINE": 2
+      }
+    },
+    {
+      "data_day": "2026-11-07",
+      "ruleset_version": "2026-11-06.1",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 0,
+      "message_count": 0,
+      "delivery_status": "NO_SEND_NO_BUSINESS_ALERT",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {}
+    },
+    {
+      "data_day": "2026-11-08",
+      "ruleset_version": "2026-11-06.1",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 0,
+      "message_count": 0,
+      "delivery_status": "NO_SEND_NO_BUSINESS_ALERT",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {}
+    },
+    {
+      "data_day": "2026-11-09",
+      "ruleset_version": "2026-11-06.1",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 1,
+      "message_count": 4,
+      "delivery_status": "READBACK_CONFIRMED",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {
+        "ALERT_SUSTAINED_DECLINE": 1
+      }
+    },
+    {
+      "data_day": "2026-11-10",
+      "ruleset_version": "2026-11-06.1",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 3,
+      "message_count": 4,
+      "delivery_status": "READBACK_CONFIRMED",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {
+        "ALERT_SUSTAINED_DECLINE": 3
+      }
+    },
+    {
+      "data_day": "2026-11-11",
+      "ruleset_version": "2026-11-06.1",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 4,
+      "message_count": 4,
+      "delivery_status": "READBACK_CONFIRMED",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {
+        "ALERT_SUSTAINED_DECLINE": 4
+      }
+    },
+    {
+      "data_day": "2026-11-12",
+      "ruleset_version": "2026-11-06.1",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 3,
+      "message_count": 4,
+      "delivery_status": "READBACK_CONFIRMED",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {
+        "ALERT_SUSTAINED_DECLINE": 3
+      }
+    },
+    {
+      "data_day": "2026-11-13",
+      "ruleset_version": "2026-11-06.1",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 2,
+      "message_count": 4,
+      "delivery_status": "READBACK_CONFIRMED",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {
+        "ALERT_SUSTAINED_DECLINE": 2
+      }
+    },
+    {
+      "data_day": "2026-11-14",
+      "ruleset_version": "2026-11-06.1",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 0,
+      "message_count": 0,
+      "delivery_status": "NO_SEND_NO_BUSINESS_ALERT",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {}
+    },
+    {
+      "data_day": "2026-11-15",
+      "ruleset_version": "2026-11-06.1",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 0,
+      "message_count": 0,
+      "delivery_status": "NO_SEND_NO_BUSINESS_ALERT",
+      "had_failure_record": true,
+      "failure_category": "BMP_SESSION_EXPIRED",
+      "alert_types": {}
+    },
+    {
+      "data_day": "2026-11-16",
+      "ruleset_version": "2026-11-06.1",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 0,
+      "message_count": 0,
+      "delivery_status": "NO_SEND_NO_BUSINESS_ALERT",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {}
+    },
+    {
+      "data_day": "2026-11-17",
+      "ruleset_version": "2026-11-06.1",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 2,
+      "message_count": 4,
+      "delivery_status": "READBACK_CONFIRMED",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {
+        "ALERT_SUSTAINED_DECLINE": 2
+      }
+    },
+    {
+      "data_day": "2026-11-18",
+      "ruleset_version": "2026-11-06.1",
+      "final_state": "VALIDATED_SUCCESS",
+      "alert_count": 2,
+      "message_count": 4,
+      "delivery_status": "READBACK_CONFIRMED",
+      "had_failure_record": false,
+      "failure_category": null,
+      "alert_types": {
+        "ALERT_SUSTAINED_DECLINE": 2
+      }
+    }
+  ]
+}

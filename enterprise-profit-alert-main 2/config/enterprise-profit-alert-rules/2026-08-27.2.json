@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0",
+  "ruleset_id": "enterprise-profit-alert",
+  "version": "2026-08-27.2",
+  "status": "ACTIVE",
+  "effective_from": "2026-08-27",
+  "timezone": "Asia/Shanghai",
+  "currency": "CNY",
+  "comparison": {
+    "current_day": "T-1_COMPLETE_NATURAL_DAY",
+    "comparison_day": "T-2_COMPLETE_NATURAL_DAY",
+    "amount_formula": "current_profit - comparison_profit",
+    "rate_formula": "profit_change_amount / abs(comparison_profit) * 100",
+    "amount_mode": "ABSOLUTE_MAGNITUDE",
+    "rate_mode": "ABSOLUTE_MAGNITUDE",
+    "amount_threshold_exclusive": "200",
+    "rate_threshold_percent_exclusive": "10",
+    "zero_comparison_profit": "UNRATED_EXCLUDE_FROM_BUSINESS_ALERT",
+    "missing_day": "DATA_QUALITY_FAILURE"
+  },
+  "entity": {
+    "stable_key": "business_type + enterprise_code",
+    "domestic_department_source": "current-day BMP customer-profit detail exact DEPARTMENT dimension",
+    "international_department_source": "current international exact XG enterprise_id mapping",
+    "multiple_departments": "DISPLAY_ALL_UNIQUE",
+    "unassigned_department_label": "未归属",
+    "name_inference": "FORBIDDEN"
+  },
+  "sources": {
+    "domestic": {
+      "interface": "POST /api/bmp/bi/customer-profit/query",
+      "tax_basis": "INCLUDED",
+      "indicator_view": "OPERATING",
+      "profit_formula": "sum source smsProfit by date + entCode"
+    },
+    "international": {
+      "tool": "billing_mcp.query_daily_stats_summary",
+      "source_platform": "Pigeon",
+      "group_by": ["enterprise_id", "account_id", "send_channel_id"],
+      "profit_formula": "sum customer_total_amount - sum channel_total_amount",
+      "oldli_access": "FORBIDDEN",
+      "operating_rules_source": "active operating-dashboard ruleset"
+    },
+    "trend": {
+      "days": 15,
+      "end_day": "T-1_COMPLETE_NATURAL_DAY",
+      "domestic": "independent BMP customer-profit daily receipt",
+      "international": "independent alert history plus governed Pigeon complete-day revision receipts",
+      "missing_day_fill": "FORBIDDEN",
+      "current_and_comparison_profit_reconciliation": "EXACT_REQUIRED"
+    }
+  },
+  "display": {
+    "title": "企业客户利润异常告警",
+    "sections": [
+      {"id": "profit_decrease", "title": "利润下降", "direction": "NEGATIVE", "color": "red"},
+      {"id": "profit_increase", "title": "利润上升", "direction": "POSITIVE", "color": "green"}
+    ],
+    "fields": [
+      "企业名称",
+      "收入归属部门",
+      "利润变化额",
+      "利润变化率",
+      "昨日利润",
+      "对比利润"
+    ],
+    "trend_title": "近15日利润走势",
+    "trend_points_per_enterprise": 15,
+    "amount_precision": 2,
+    "rate_precision": 2,
+    "sort_within_section": "abs(profit_change_amount) DESC, business_type, enterprise_code"
+  },
+  "delivery": {
+    "profile": "bmp-task-bot",
+    "sender_name": "业财告警机器人",
+    "send_when_no_anomaly": false,
+    "recipients": [
+      {"name": "金长春", "email": "jinchangchun@yuexin.cn"},
+      {"name": "寇誉博", "email": "kouyubo@yuexin.cn"}
+    ],
+    "acceptance_test_recipient": "寇誉博",
+    "recipient_resolution": "resolve email under bmp-task-bot at send time",
+    "cross_application_open_id": "FORBIDDEN",
+    "message_readback_required": true,
+    "idempotency_scope": "ruleset_version + current_day + card_sha256 + recipient_email + delivery_mode"
+  },
+  "task_boundary": {
+    "operating_dashboard_base": "NOT_A_DEPENDENCY",
+    "operating_dashboard_card": "NOT_A_DEPENDENCY",
+    "operating_dashboard_publish_state": "NOT_A_DEPENDENCY",
+    "no_contract_alert_schedule": "UNCHANGED",
+    "failure_policy": "FAIL_CLOSED_PER_SOURCE_AND_DO_NOT_SEND_BUSINESS_ALERT"
+  }
+}

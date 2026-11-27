@@ -1,0 +1,141 @@
+{
+  "source": "kanban local workspace; not production readback",
+  "files": [
+    {
+      "path": "config/enterprise-profit-alert-agent/preview-snapshots.json",
+      "sha256": "4ec63a5c342832faae107c501b9a86f5890a6e42955d87bf4466483ad65a52bc"
+    },
+    {
+      "path": "config/enterprise-profit-alert-rules/2026-08-27.1.json",
+      "sha256": "965568289a634eddadf27371f1d2688e395a9cfb951dae3d2563afde6718ca10"
+    },
+    {
+      "path": "config/enterprise-profit-alert-rules/2026-08-27.2.json",
+      "sha256": "b0595439080500997c8ffba934e4d13461de4519fa5e929ec4c533ede8d8f520"
+    },
+    {
+      "path": "config/enterprise-profit-alert-rules/2026-08-30.1.json",
+      "sha256": "835766ffd974e3a498f626ec8976429c3368bcba4812809bf4bfd6afc20d44ae"
+    },
+    {
+      "path": "config/enterprise-profit-alert-rules/2026-08-31.1.json",
+      "sha256": "5304b1b84c4b98af8e58bac2637c0cb53d7eca69d145dae927783285dfad4997"
+    },
+    {
+      "path": "config/enterprise-profit-alert-rules/2026-09-23.1.json",
+      "sha256": "bde452ac82f83d464f56c9a587718c564c38cceffb687d443eb1dd3d3221611d"
+    },
+    {
+      "path": "config/enterprise-profit-alert-rules/2026-09-30.1.json",
+      "sha256": "17681e3e8ba959c7499d4b6d4658f1a8181dba7fcda1efe25538eb9083484b16"
+    },
+    {
+      "path": "config/enterprise-profit-alert-rules/2026-09-30.2.json",
+      "sha256": "64722ded86c6f871227bf5dcdd7d89f29506366989b26c9f9d9f5320b7c3fa10"
+    },
+    {
+      "path": "config/enterprise-profit-alert-rules/2026-11-05.1.json",
+      "sha256": "5e31b6c93b19acc1f0e59ca84545c60e80bd56825141ed3ee1fa90278c75d18a"
+    },
+    {
+      "path": "config/enterprise-profit-alert-rules/2026-11-06.1.json",
+      "sha256": "3783e8cd236c1bbc51b2ccf4214b6e803fda691fcc51969f43d0b194a05079e4"
+    },
+    {
+      "path": "config/enterprise-profit-alert-rules/active.json",
+      "sha256": "938f0dbf962c82792f27fc1da0d2004f760e49948b067831658fecac7fb94e21"
+    },
+    {
+      "path": "config/operating-dashboard-rules/2026-08-27.2.json",
+      "sha256": "64817267987c9e56f55451eb952b6bb151dec3681703dcb86f9c58650c605eb1"
+    },
+    {
+      "path": "config/operating-dashboard-rules/active.json",
+      "sha256": "34663ca54f27ab1b6232b38df99c91399502fe6170af09d50ee6dc3034cfd334"
+    },
+    {
+      "path": "data_monitor_platform_server_latest/pigeon/scheduled/intl-daily-report/scripts/query_oldsms_enterprise_mcp.py",
+      "sha256": "30262dbe887c74ee941f5d195e5a49902e9a498709f7ebbcc283f0d2d3ca1dfa"
+    },
+    {
+      "path": "docs/企业客户利润异常告警.md",
+      "sha256": "6f4c89c73c163735f93545b47ffa2abbac26933d44345003fc04fe0099a89454"
+    },
+    {
+      "path": "integrations/deerflow/enterprise_profit_alert_mcp.py",
+      "sha256": "35049f052de3946b0aef0c19bfac5ce12401bd183841484afb40d462df18d1b2"
+    },
+    {
+      "path": "scripts/activate_enterprise_profit_alert_rules.py",
+      "sha256": "cab7daa2e8b3641830a399ee9a32f4075aabf51b82c89249794dde955e18afc3"
+    },
+    {
+      "path": "scripts/backtest_enterprise_profit_calendar_alert.py",
+      "sha256": "55b3b75a77c54e18d7b27275225383892cf7fe90795eabba684c53b3ba342fd3"
+    },
+    {
+      "path": "scripts/build_enterprise_profit_alert.py",
+      "sha256": "03cd191a17f8efe96ed646240a2704c981d837a9484672bf39d55abd0e5f3f14"
+    },
+    {
+      "path": "scripts/build_enterprise_profit_alert_card.py",
+      "sha256": "41cac4e25a74e611203df0a4300fe0db0e03d4acb9729e39c35ccd2e6df5b9ff"
+    },
+    {
+      "path": "scripts/build_enterprise_profit_alert_history.py",
+      "sha256": "a85376f3c479bd22d6b6e2d72597783dd020005802fa98219b4649329caa622c"
+    },
+    {
+      "path": "scripts/build_enterprise_profit_calendar_alert.py",
+      "sha256": "ce1c3c2899532ad3a8b98abd78b9220edea44d97d0db958cf90e86cb12eafd12"
+    },
+    {
+      "path": "scripts/create_enterprise_profit_alert_rules_20260831_1.py",
+      "sha256": "3ba3d9ec8ee1fc128503c66abac56b7157a70455336024a57df8215f851f4530"
+    },
+    {
+      "path": "scripts/create_enterprise_profit_alert_rules_20261106_1.py",
+      "sha256": "0306af14fcbc3757ca367e58d0576e95240682d3cd3ce4f69a963b51e963a0c5"
+    },
+    {
+      "path": "scripts/fetch_enterprise_profit_alert_pigeon.py",
+      "sha256": "68cc37512f983956fffa094a5969d793e0ffcbaeacd6a09f48d93fae0713cf87"
+    },
+    {
+      "path": "scripts/fetch_oldsms_enterprise_master_litellm.py",
+      "sha256": "c907443b8d70fd969e365e3bae67de9aa5c1d21440f07d0d30d0acf567d1ba05"
+    },
+    {
+      "path": "scripts/normalize_pigeon_artifact_receipts.py",
+      "sha256": "13583059b0c375a01e249359272f85fafcbc9510f15d23b885e0823c57bdacbe"
+    },
+    {
+      "path": "scripts/query_enterprise_profit_alert_domestic.py",
+      "sha256": "0ad025da226aa4c0f0700f8ac59f23078354e382c9e26a778e9f023a011c9c72"
+    },
+    {
+      "path": "scripts/run_enterprise_profit_alert_daily.py",
+      "sha256": "c95c7ca825a90f2a5e0cd2eda978f7645822974fee2c3e5c9e32f7bdceaa4eb9"
+    },
+    {
+      "path": "scripts/send_enterprise_profit_alert_card.py",
+      "sha256": "541d0b9d679811d2f4f6b498d71483758e1982a527559c753df1c51e777820e5"
+    },
+    {
+      "path": "scripts/test_enterprise_profit_alert.py",
+      "sha256": "70fb739855954a0a595c92a89cc6eef3ee67a985468016a0c0ca8474f472fd1c"
+    },
+    {
+      "path": "scripts/test_enterprise_profit_alert_deerflow.py",
+      "sha256": "71cc66698f9f2fa3895d9057d58a6edb34f9919c19e49e8463ed455f4cc680f3"
+    },
+    {
+      "path": "scripts/test_enterprise_profit_alert_domestic.py",
+      "sha256": "49c0efdaf38c526ed07ba821f9ee56f2b8250dd2555b5bb1a616122fdc0f2760"
+    },
+    {
+      "path": "scripts/validate_enterprise_profit_alert_governance.py",
+      "sha256": "abefc1c445fe29fa8dde48794d1741258b0ab9bf00b29be628347d46393f033c"
+    }
+  ]
+}

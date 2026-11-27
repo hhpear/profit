@@ -1,0 +1,191 @@
+{
+  "schema_version": "2.0",
+  "ruleset_id": "enterprise-profit-alert",
+  "version": "2026-11-05.1",
+  "status": "APPROVED",
+  "timezone": "Asia/Shanghai",
+  "currency": "CNY",
+  "current_day": "T-1_COMPLETE_NATURAL_DAY",
+  "baseline": {
+    "method": "SAME_CALENDAR_CLASS_MEDIAN_MAD",
+    "minimum_samples": 6,
+    "maximum_samples": 8,
+    "mad_multiplier_exclusive": "3",
+    "comparison_formula": "actual_profit - median(comparable_historical_profit)",
+    "rate_formula": "profit_deviation_amount / max(abs(baseline_profit), rate_denominator_floor) * 100",
+    "zero_baseline": "UNRATED_ZERO_BASELINE",
+    "insufficient_samples": "UNRATED_INSUFFICIENT_BASELINE",
+    "missing_day": "DATA_QUALITY_FAILURE"
+  },
+  "thresholds": {
+    "amount_exclusive": "200",
+    "rate_percent_exclusive": "10",
+    "rate_denominator_floor": "200",
+    "combination": "AMOUNT_AND_RATE_AND_MAD"
+  },
+  "persistence": {
+    "lookback_days": 3,
+    "minimum_anomalous_days": 2,
+    "ordinary_decline": "ALERT_ONLY_WHEN_MINIMUM_ANOMALOUS_DAYS_MET",
+    "positive_to_negative": "IMMEDIATE_ALERT",
+    "increase": "OBSERVATION_ONLY"
+  },
+  "calendar": {
+    "source": "chinesecalendar 1.11.0 frozen extraction",
+    "coverage_start": "2026-01-01",
+    "coverage_end": "2026-12-31",
+    "default_class": "WEEKDAY_0_TO_6",
+    "overrides": {
+      "2026-01-01": "HOLIDAY_NEW_YEARS_DAY",
+      "2026-01-02": "HOLIDAY_NEW_YEARS_DAY",
+      "2026-01-03": "HOLIDAY_NEW_YEARS_DAY",
+      "2026-01-04": "ADJUSTED_WORKDAY",
+      "2026-02-14": "ADJUSTED_WORKDAY",
+      "2026-02-15": "HOLIDAY_SPRING_FESTIVAL",
+      "2026-02-16": "HOLIDAY_SPRING_FESTIVAL",
+      "2026-02-17": "HOLIDAY_SPRING_FESTIVAL",
+      "2026-02-18": "HOLIDAY_SPRING_FESTIVAL",
+      "2026-02-19": "HOLIDAY_SPRING_FESTIVAL",
+      "2026-02-20": "HOLIDAY_SPRING_FESTIVAL",
+      "2026-02-21": "HOLIDAY_SPRING_FESTIVAL",
+      "2026-02-22": "HOLIDAY_SPRING_FESTIVAL",
+      "2026-02-23": "HOLIDAY_SPRING_FESTIVAL",
+      "2026-02-28": "ADJUSTED_WORKDAY",
+      "2026-04-04": "HOLIDAY_TOMB_SWEEPING_DAY",
+      "2026-04-05": "HOLIDAY_TOMB_SWEEPING_DAY",
+      "2026-04-06": "HOLIDAY_TOMB_SWEEPING_DAY",
+      "2026-05-01": "HOLIDAY_LABOUR_DAY",
+      "2026-05-02": "HOLIDAY_LABOUR_DAY",
+      "2026-05-03": "HOLIDAY_LABOUR_DAY",
+      "2026-05-04": "HOLIDAY_LABOUR_DAY",
+      "2026-05-05": "HOLIDAY_LABOUR_DAY",
+      "2026-05-09": "ADJUSTED_WORKDAY",
+      "2026-06-19": "HOLIDAY_DRAGON_BOAT_FESTIVAL",
+      "2026-06-20": "HOLIDAY_DRAGON_BOAT_FESTIVAL",
+      "2026-06-21": "HOLIDAY_DRAGON_BOAT_FESTIVAL",
+      "2026-09-20": "ADJUSTED_WORKDAY",
+      "2026-09-25": "HOLIDAY_MID_AUTUMN_FESTIVAL",
+      "2026-09-26": "HOLIDAY_MID_AUTUMN_FESTIVAL",
+      "2026-09-27": "HOLIDAY_MID_AUTUMN_FESTIVAL",
+      "2026-10-01": "HOLIDAY_NATIONAL_DAY",
+      "2026-10-02": "HOLIDAY_NATIONAL_DAY",
+      "2026-10-03": "HOLIDAY_NATIONAL_DAY",
+      "2026-10-04": "HOLIDAY_NATIONAL_DAY",
+      "2026-10-05": "HOLIDAY_NATIONAL_DAY",
+      "2026-10-06": "HOLIDAY_NATIONAL_DAY",
+      "2026-10-07": "HOLIDAY_NATIONAL_DAY",
+      "2026-10-10": "ADJUSTED_WORKDAY"
+    },
+    "outside_coverage": "FAIL_CLOSED"
+  },
+  "entity": {
+    "department_dependency": "FORBIDDEN",
+    "department_display": "FORBIDDEN",
+    "name_inference": "NOT_APPLICABLE"
+  },
+  "sources": {
+    "domestic": {
+      "interface": "POST /api/bmp/bi/customer-profit/query",
+      "tax_basis": "INCLUDED",
+      "indicator_view": "OPERATING",
+      "profit_formula": "sum source smsProfit by date + entCode",
+      "pagination": "COMPLETE_REQUIRED"
+    },
+    "international": {
+      "tool": "billing_mcp.query_daily_stats_summary",
+      "gateway": {
+        "transport": "LITELLM_REMOTE_MCP",
+        "endpoint": "https://flux-admin.yuexin.cn/mcp/",
+        "remote_tool": "yuexin_mcp_gateway-billing_mcp__query_daily_stats_summary",
+        "legacy_oauth_gateway": "FORBIDDEN",
+        "forbidden_endpoints": [
+          "106.14.207.126:8000"
+        ]
+      },
+      "source_platform": "Pigeon",
+      "group_by": [
+        "enterprise_id",
+        "account_id",
+        "send_channel_id"
+      ],
+      "profit_formula": "sum customer_total_amount - sum channel_total_amount",
+      "oldli_access": "FORBIDDEN",
+      "operating_rules_source": "SOURCE_EXCLUSION_SEMANTICS_ONLY; DEPARTMENT_SEMANTICS_FORBIDDEN"
+    }
+  },
+  "trend": {
+    "days": 15,
+    "end_day": "T-1_COMPLETE_NATURAL_DAY",
+    "missing_day_fill": "FORBIDDEN",
+    "current_profit_reconciliation": "EXACT_REQUIRED"
+  },
+  "display": {
+    "title": "企业客户利润异常告警",
+    "alert_scope": [
+      "ALERT_SIGN_FLIP",
+      "ALERT_SUSTAINED_DECLINE"
+    ],
+    "observation_scope": [
+      "WATCH_SINGLE_DAY_DECLINE",
+      "OBSERVATION_INCREASE"
+    ],
+    "fields": [
+      "企业名称",
+      "业务类型",
+      "实际利润",
+      "基线利润",
+      "利润偏差额",
+      "利润偏差率",
+      "正常波动区间",
+      "基线样本"
+    ],
+    "trend_title": "近15日利润走势",
+    "trend_points_per_enterprise": 15,
+    "amount_precision": 2,
+    "rate_precision": 2,
+    "sort_within_alerts": "abs(profit_deviation_amount) DESC, business_type, enterprise_code"
+  },
+  "delivery": {
+    "profile": "bmp-task-bot",
+    "sender_name": "业财告警助手",
+    "send_when_no_anomaly": false,
+    "recipients": [
+      {
+        "name": "金长春",
+        "email": "jinchangchun@yuexin.cn"
+      },
+      {
+        "name": "寇誉博",
+        "email": "kouyubo@yuexin.cn"
+      },
+      {
+        "name": "李童晶",
+        "email": "litongjing@yuexin.cn"
+      },
+      {
+        "name": "刘嘉玲",
+        "email": "liujialing@yuexin.cn"
+      }
+    ],
+    "acceptance_test_recipient": "寇誉博",
+    "recipient_resolution": "resolve email under bmp-task-bot at send time",
+    "cross_application_open_id": "FORBIDDEN",
+    "message_readback_required": true,
+    "idempotency_scope": "ruleset_version + current_day + card_sha256 + recipient_email + delivery_mode",
+    "sender_app_id": "cli_aaa38ddf53f8dbcf"
+  },
+  "acceptance": {
+    "technical_backtest_required": true,
+    "business_label_accuracy_status": "NOT_YET_VERIFIED",
+    "activation_requires_all_sources_current": true,
+    "activation_evidence_mode": "GOVERNANCE_HARDENING_WITH_EXISTING_DELIVERY_READBACK"
+  },
+  "task_boundary": {
+    "operating_dashboard_base": "NOT_A_DEPENDENCY",
+    "operating_dashboard_card": "NOT_A_DEPENDENCY",
+    "operating_dashboard_publish_state": "NOT_A_DEPENDENCY",
+    "failure_policy": "FAIL_CLOSED_AND_DO_NOT_SEND_BUSINESS_ALERT"
+  },
+  "supersedes": "2026-09-30.2",
+  "change_reason": "新增刘嘉玲为正式利润异常告警收件人；其余来源、计算、展示、零告警和回读规则保持不变"
+}

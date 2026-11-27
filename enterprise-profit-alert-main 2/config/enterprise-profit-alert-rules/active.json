@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "ruleset_id": "enterprise-profit-alert",
+  "status": "ACTIVE",
+  "active_version": "2026-11-06.1",
+  "ruleset_path": "config/enterprise-profit-alert-rules/2026-11-06.1.json",
+  "ruleset_sha256": "3783e8cd236c1bbc51b2ccf4214b6e803fda691fcc51969f43d0b194a05079e4",
+  "activation_id": "activate-BMP-CUSTOMER-TYPES-2026-11-06.1",
+  "activated_at": "2026-11-06T16:29:02+08:00",
+  "approved_by": "user-confirmed-latest-customer-types",
+  "reason": "国内利润告警同步当前BMP客户类型范围，以QuasiCustomer替换Internet",
+  "previous_version": "2026-11-05.1",
+  "acceptance_receipt": "/Users/a106041/Documents/vscode_projects/kanban/outputs/enterprise-profit-alert-rules-2026-11-06.1-customer-types/enterprise-profit-alert-rules-activation-evidence.json"
+}

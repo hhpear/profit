@@ -1,0 +1,1248 @@
+{
+  "schema_version": "1.0",
+  "ruleset_id": "operating-dashboard",
+  "version": "2026-08-27.2",
+  "status": "APPROVED",
+  "effective_from": "2026-08-27",
+  "rollback_eligible": true,
+  "semantic_bundle": {
+    "version": "2026-08-18.1",
+    "sha256": "64ce1539d97ebf63a160837e51febc39e7b8e280297644c70c33c91450c85bca",
+    "contract_mode": "CANONICAL"
+  },
+  "common_basis": {
+    "currency": "CNY",
+    "tax_basis": "SOURCE_SPECIFIC_NO_DASHBOARD_TAX_TRANSFORMATION",
+    "indicator_view": "OPERATING",
+    "caliber_name": "GOVERNED_DOMESTIC_AND_INTERNATIONAL_OPERATING",
+    "caliber_disclaimer": "Business-operating customer-profit caliber; not statutory financial statements, invoice truth, or bank cash receipts/payments",
+    "decimal_policy": "Preserve source precision; ROUND_HALF_UP to 2 decimals only in display"
+  },
+  "sources": {
+    "domestic_sms": {
+      "status": "VERIFIED",
+      "data_space": "BMP_CUSTOMER_PROFIT",
+      "summary_interface": "POST /api/bmp/bi/customer-profit/query-stat",
+      "detail_interface": "POST /api/bmp/bi/customer-profit/query",
+      "business_body_dimension": {
+        "semantic_id": "S-24",
+        "rule_version": "S-24.v1",
+        "enrichment_interface": "POST /api/bmp/crm/customer-project/query",
+        "retrieval_filter": "exact projectName",
+        "join_key": "exact projectId",
+        "candidate_field": "businessBodyCodes",
+        "multiple_value_policy": "FIRST_SOURCE_ORDER_AFTER_DEDUP",
+        "missing_status": "NOT_READY",
+        "duplicate_revenue_attribution": "FORBIDDEN"
+      },
+      "required_filters": {
+        "tax": true,
+        "tax_basis": "INCLUDED",
+        "indicator_view": "OPERATING"
+      },
+      "forbidden_fallbacks": [
+        "BMP_OPERATE_BOARD",
+        "OLAP",
+        "sales_statement",
+        "sales_order"
+      ],
+      "management_dashboard_status": "CANONICAL_OPERATING_SOURCE",
+      "enterprise_identity_missing_policy": "NONZERO_FAIL_CLOSED; ZERO_INCOME_AND_ZERO_PROFIT_EXCLUDE_WITH_AUDIT"
+    },
+    "international_sms": {
+      "status": "VERIFIED",
+      "semantic_version": "S-22.v16",
+      "frozen_history": "2026-01-01..2026-07-31",
+      "pigeon_only_from": "2026-08-01",
+      "pigeon_tool_family": "billing_mcp",
+      "oldli_access_after_cutover": "FORBIDDEN",
+      "test_keywords": [
+        "测试",
+        "压测",
+        "老李平台切回",
+        "刘洋"
+      ],
+      "explicit_test_accounts": [
+        "woVJBI",
+        "aw2qE8/vicky111",
+        "telq",
+        "telq2",
+        "2M41MB"
+      ],
+      "oldli_channel_exclusion": {
+        "field": "send_channel_id",
+        "contains": "26070901",
+        "handling": "EXCLUDE_MATCHING_FACT_ROW_ONLY",
+        "scope": "ROW_LEVEL_ONLY",
+        "legacy_rule": true
+      },
+      "account_mapping": "exact ID or same length differing only final character; name mapping forbidden",
+      "management_dashboard_status": "CANONICAL_OPERATING_SOURCE",
+      "source": "frozen_raw_ledger_then_pigeon_billing_mcp_daily_detail",
+      "withholding_adjustment": "FORBIDDEN",
+      "compatible_previous_ledger_versions": [
+        "S-22.v14",
+        "S-22.v16"
+      ],
+      "known_enterprise_keyword_matches": [
+        {
+          "account_id": "2Ee78x",
+          "enterprise_name": "大平台通用跳转测试账号企业",
+          "matched_by": "enterprise_name"
+        }
+      ],
+      "incremental_data_space": "PIGEON_BILLING_DAILY_DETAIL",
+      "daily_query_tools": [
+        "billing_mcp.query_daily_stats_summary"
+      ],
+      "authoritative_amount_value": "LATEST_BILLING_MCP_OVERALL_DAILY_DETAIL_VALUE",
+      "authoritative_amount_fields": [
+        "customer_total_amount",
+        "channel_total_amount"
+      ],
+      "fallback_amount_fields": "FORBIDDEN",
+      "currency_label_authority": "NON_AUTHORITATIVE",
+      "governed_currency": "CNY",
+      "test_exclusion_required_identity_fields": [
+        "account_id",
+        "account_name",
+        "enterprise_id",
+        "enterprise_name"
+      ],
+      "raw_receipt_contract": {
+        "artifacts": [
+          "pigeon-daily-overall-<data-date>.json"
+        ],
+        "preservation": "ORIGINAL_FILE_UNCHANGED",
+        "manifest_fields": [
+          "sha256",
+          "bytes",
+          "source_role",
+          "currency_labels",
+          "currency_label_authority"
+        ],
+        "currency_label_authority": "NON_AUTHORITATIVE"
+      },
+      "daily_audit_contract": "PIGEON_DAILY_ENTERPRISE_AUTHORITY_V3",
+      "authoritative_amount_selection": "LATEST_COMPLETED_OVERALL_DAILY_RECEIPT_PER_DAY",
+      "test_exclusion_amount_source": "OVERALL_DAILY_DETAIL_ROWS",
+      "account_channel_query_use": "LOCAL_IDENTITY_COVERAGE_ONLY",
+      "amount_difference_policy": "SINGLE_AUTHORITATIVE_RECEIPT_NO_CROSS_ENDPOINT_COMPARISON",
+      "revision_policy": {
+        "window_hours": 72,
+        "state": "PROVISIONAL",
+        "same_stable_key_update": "LATEST_SOURCE_VALUE_WINS",
+        "outside_window": "FINAL_UNLESS_APPROVED_REOPEN"
+      },
+      "completed_restatement_period": "2026-08-01..2026-08-23",
+      "completed_restatement_evidence": "outputs/automation-2-20260823-20260824Taugust-restatement-recovery-v2/migration-readback.json",
+      "incremental_detail_history_reuse": {
+        "allowed": true,
+        "lineage_pointer": "acquisition-manifest.previous_international_ledger",
+        "required_manifest_status": "SOURCES_FROZEN",
+        "required_artifact_pair": [
+          "pigeon-daily-overall-<day>.json",
+          "international-pigeon-<day>.json"
+        ],
+        "required_readback": [
+          "bytes",
+          "sha256"
+        ],
+        "outside_window_requery": "FORBIDDEN",
+        "missing_or_mismatch": "FAIL_CLOSED"
+      },
+      "enterprise_test_exclusion": {
+        "mode": "HYBRID_EXACT_ENTERPRISE_AND_ACCOUNT",
+        "enterprise_ids": [
+          "bd02c333-2dea-4211-9647-c55f7d7f49d4",
+          "fcb38adb-35fc-41f3-8be4-d3e0c7ecaef0"
+        ],
+        "known_account_enterprise_pairs": [
+          {
+            "account_id": "telq2",
+            "enterprise_id": "bd02c333-2dea-4211-9647-c55f7d7f49d4"
+          },
+          {
+            "account_id": "2Ee78x",
+            "enterprise_id": "fcb38adb-35fc-41f3-8be4-d3e0c7ecaef0"
+          }
+        ],
+        "known_test_account_mismatch": "FAIL_CLOSED",
+        "company_operating_total_change": "NONE",
+        "shared_enterprise_account_ids": [
+          "woVJBI",
+          "aw2qE8",
+          "2M41MB"
+        ],
+        "shared_enterprise_full_exclusion": "FORBIDDEN"
+      },
+      "enterprise_ranking": {
+        "bootstrap_artifact": "outputs/operating-dashboard-bootstrap/international-enterprise-daily-15d-2026-08-16.json",
+        "rolling_days": 15,
+        "entity_semantics": "INTERNATIONAL_ENTERPRISE",
+        "business_type": "国际"
+      },
+      "minimal_group_by": [
+        "enterprise_id",
+        "account_id",
+        "send_channel_id"
+      ]
+    },
+    "byte_direct": {
+      "status": "AVAILABLE_MONTH_ONLY",
+      "source": "Feishu Sheet CuWvsmNy8hnpjjtH72FcVNYwnEb / Sheet1 / 0QlZbQ",
+      "latest_verified_revision": 305,
+      "granularity": "MONTH",
+      "day_generation": "FORBIDDEN",
+      "current_month_absence_status": "NOT_READY/CURRENT_MONTH_SOURCE_ABSENT",
+      "management_dashboard_status": "EXCLUDED_UNTIL_APPROVED_DEDUPLICATION_AND_ATTRIBUTION",
+      "daily_publication_gate": "OPTIONAL"
+    },
+    "detection_product_line": {
+      "status": "NOT_READY/FILTER_NOT_APPLIED_OR_UNVERIFIABLE"
+    },
+    "other_product_lines": {
+      "status": "NOT_READY",
+      "items": [
+        "直连-阿里",
+        "5G",
+        "黑名单",
+        "彩信",
+        "语音",
+        "过账",
+        "码号"
+      ]
+    },
+    "receivable": {
+      "status": "PARTIAL",
+      "currency": "CNY_ONLY",
+      "entity_semantics": "ENTERPRISE",
+      "enterprise_key": "enterprise_code",
+      "customer_master_role": "AUDIT_ONLY",
+      "calendar_month_policy": "CLAMP_TO_TARGET_MONTH_END",
+      "statement_approve_time_status": "NOT_READY/STATEMENT_APPROVE_TIME_NOT_EXPOSED",
+      "invoice_interface": "POST /api/bmp/bill/customer-invoice/query",
+      "invoice_approved_state": "Agreed",
+      "invoice_approved_time": "approveTime",
+      "exact_link": "settlementCodes -> customer-settlement.code",
+      "partial_invoice_amount": "notInvoiceMoney",
+      "partial_collection_amount": "notProceedMoney",
+      "multiple_invoice_allocation": "PARTIAL_UNTIL_CONFIRMED",
+      "financial_anomaly_positive_remaining_only": true,
+      "zero_amount_policy": "EXCLUDE_FROM_FINANCIAL_ANOMALY; PRESERVE_AUDIT_COUNT",
+      "invoice_document_count_basis": "UNIQUE_INVOICE_ID",
+      "invoice_detail_granularity": "INVOICE_X_SETTLEMENT",
+      "available_detail_required_fields": [
+        "business_anomaly_status",
+        "anomaly_reason",
+        "overdue_days"
+      ]
+    },
+    "sales_contract": {
+      "status": "PARTIAL",
+      "valid_status": "Approved",
+      "expiring_window_days_inclusive": 30,
+      "missing_contract_match": "exact platform + enterprise code -> project; Approved contract with same projectId and complete statement-period coverage",
+      "fuzzy_match": "FORBIDDEN",
+      "risk_period": "YEAR_TO_DATE_THROUGH_CUTOFF",
+      "month_to_date_empty_overwrites_history": "FORBIDDEN"
+    },
+    "reference_profit_base": {
+      "status": "VERIFIED_LIMITED_USE",
+      "base_token": "KgmUbghwnaKOTOsKqmPcQfjlnDg",
+      "base_name": "销售利润达成情况",
+      "achievement_table": "tblVmjNPJeqA3rtU",
+      "international_department_table": "tbldDfI13PFLQeAK",
+      "department_target_table": "tblaovTW6hKcwcvk",
+      "company_target_table": "tblK6C7PHvmgHg2p",
+      "latest_verified_revision": 58,
+      "coverage_start": "2026-01-01",
+      "latest_verified_data_date": "2026-08-05",
+      "company_departments": [
+        "市场拓展部",
+        "重客部",
+        "运营部",
+        "国际短信项目组"
+      ],
+      "included_sources": [
+        "国内",
+        "国际"
+      ],
+      "excluded_unallocated_sources": [
+        "直连",
+        "彩信",
+        "未拆分",
+        "其他未划分业务"
+      ],
+      "excluded_unallocated_policy": "STORE_SEPARATELY; FORBIDDEN_IN_DASHBOARD_AND_COMPANY_TOTALS_UNTIL_APPROVED",
+      "allowed_uses": [
+        "COMPANY_AND_DEPARTMENT_TARGETS",
+        "ONE_TIME_MANUAL_ADJUSTMENTS",
+        "INTERNATIONAL_DEPARTMENT_MAPPING"
+      ],
+      "operating_amount_use": "FORBIDDEN",
+      "profit_detail_table": "tblXyDiJNfpZjO0H",
+      "profit_detail_use": "FORBIDDEN_FOR_INCOME_COST_PROFIT_OR_ACTUAL_ACHIEVEMENT",
+      "international_department_mapping_contract": {
+        "fields": [
+          "部门",
+          "GJ企业ID",
+          "XG企业ID",
+          "平台",
+          "企业名称"
+        ],
+        "join": "exact platform + enterprise_id",
+        "name_inference": "FORBIDDEN",
+        "blank_department": "UNASSIGNED",
+        "pagination": "ALL_RECORDS_REQUIRED"
+      },
+      "target_departments": [
+        "市场拓展部",
+        "重客部",
+        "运营部",
+        "国际短信项目组"
+      ],
+      "targetless_departments": []
+    }
+  },
+  "metrics": {
+    "domestic_income": {
+      "semantic_id": "S-01",
+      "rule_version": "S-01.v5",
+      "metric_code": "OPERATING_INCOME",
+      "formula": "smsIncome"
+    },
+    "domestic_cost": {
+      "semantic_id": "S-02",
+      "rule_version": "S-02.v7",
+      "metric_code": "OPERATING_COST",
+      "formula": "channelCost + rebate"
+    },
+    "domestic_profit": {
+      "semantic_id": "S-03",
+      "rule_version": "S-03.v5",
+      "metric_code": "OPERATING_PROFIT",
+      "formula": "smsProfit",
+      "reconciliation_policy": "PRESERVE_SOURCE_DIFFERENCE"
+    },
+    "domestic_income_profit_rate": {
+      "metric_code": "OPERATING_PROFIT_RATE",
+      "formula": "smsProfit / smsIncome * 100",
+      "zero_income_status": "NOT_READY"
+    },
+    "domestic_cost_profit_rate": {
+      "status": "NOT_READY/METRIC_SEMANTICS_UNCONFIRMED"
+    },
+    "international_income": {
+      "semantic_id": "S-22",
+      "rule_version": "S-22.v16",
+      "formula": "test-excluded billing_mcp latest overall daily-detail customer_total_amount"
+    },
+    "international_cost": {
+      "semantic_id": "S-22",
+      "rule_version": "S-22.v16",
+      "formula": "test-excluded billing_mcp latest overall daily-detail channel_total_amount",
+      "withholding_adjustment": "FORBIDDEN"
+    },
+    "international_profit": {
+      "semantic_id": "S-22",
+      "rule_version": "S-22.v16",
+      "formula": "raw corrected income - raw corrected cost",
+      "withholding_adjustment": "FORBIDDEN"
+    },
+    "byte_direct_income": {
+      "semantic_id": "S-23",
+      "rule_version": "S-23.v2",
+      "formula": "source total income"
+    },
+    "byte_direct_cost": {
+      "semantic_id": "S-23",
+      "rule_version": "S-23.v2",
+      "formula": "source total cost"
+    },
+    "byte_direct_profit": {
+      "semantic_id": "S-23",
+      "rule_version": "S-23.v2",
+      "formula": "income - cost"
+    },
+    "profit_achievement": {
+      "semantic_id": "S-04",
+      "rule_version": "S-04.v6",
+      "completed_formula": "actual profit + one-time manual adjustment",
+      "projection_formula": "actual profit / elapsed natural days * quarter natural days + one-time manual adjustment",
+      "company_scope": "市场拓展部+重客部+运营部+国际短信项目组",
+      "manual_adjustment_run_rate": "FORBIDDEN",
+      "actual_profit_source": "governed domestic and international operating profit",
+      "reference_profit_detail_actual_use": "FORBIDDEN",
+      "department_actual_status_until_attribution_complete": "PARTIAL",
+      "department_actual_source": "domestic BMP exact department plus international exact enterprise-ID mapping; unassigned profit preserved and disclosed",
+      "target_scope": [
+        "市场拓展部",
+        "重客部",
+        "运营部",
+        "国际短信项目组"
+      ],
+      "monthly_base_rows": {
+        "enabled": true,
+        "target_table": "公司利润达成",
+        "field": "月份",
+        "field_format": "YYYY-MM",
+        "field_position": "AFTER_QUARTER",
+        "stable_key": "month + department",
+        "actual_profit_source": "governed company DAY facts plus exact domestic and international department daily attribution",
+        "quarter_only_fields": [
+          "季度目标（万元）",
+          "人工调整（万元）",
+          "已完成利润（万元）",
+          "当前达成率（%）",
+          "预计季度利润（万元）",
+          "预计达成率（%）"
+        ],
+        "quarter_only_field_value_on_month_rows": null,
+        "management_card_consumption": "FORBIDDEN",
+        "quarter_rows_month_value": "BLANK",
+        "readback": "REQUIRED_FOR_FIELD_ORDER_ROWS_VALUES_AND_DASHBOARD_INVARIANCE"
+      },
+      "domestic_actual_source": "LIVE_BMP_CUSTOMER_PROFIT_DETAIL_FULL_CURRENT_QUARTER_PER_DAILY_RUN",
+      "international_actual_source": "FROZEN_2026-01-01..2026-07-31_THEN_PIGEON_FROM_2026-08-01"
+    },
+    "management_operating": {
+      "semantic_id": "S-25",
+      "rule_version": "S-25.v10",
+      "formula": "domestic BMP daily five-metric facts + international test-excluded latest billing_mcp overall daily-detail three-metric facts; account/channel amounts are audit-only; currency labels are non-authoritative and governed currency is CNY; reference Base operating amounts forbidden",
+      "domestic_day_metric_codes": [
+        "OPERATING_INCOME",
+        "CHANNEL_COST",
+        "CUSTOMER_REBATE",
+        "OPERATING_COST",
+        "OPERATING_PROFIT"
+      ],
+      "international_day_metric_codes": [
+        "OPERATING_INCOME",
+        "OPERATING_COST",
+        "OPERATING_PROFIT"
+      ]
+    },
+    "domestic_channel_cost": {
+      "semantic_id": "S-02",
+      "rule_version": "S-02.v7",
+      "metric_code": "CHANNEL_COST",
+      "formula": "channelCost"
+    },
+    "domestic_rebate": {
+      "semantic_id": "S-02",
+      "rule_version": "S-02.v7",
+      "metric_code": "CUSTOMER_REBATE",
+      "formula": "rebate"
+    }
+  },
+  "aggregation": {
+    "day_revision": {
+      "provisional_days": 3,
+      "finalizing_day_offset": 4,
+      "states": [
+        "PROVISIONAL",
+        "FINALIZING",
+        "FINAL",
+        "REOPENED"
+      ],
+      "frozen_requery": "FORBIDDEN_UNLESS_APPROVED_REOPEN",
+      "daily_query_offsets": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "query_meaning": "yesterday through third prior day are PROVISIONAL; fourth prior day is FINALIZING then FINAL",
+      "domestic_history_coverage": "2026-01-01..2026-08-05",
+      "domestic_history_metric_count_per_day": 5
+    },
+    "periods": {
+      "DAY": "standard source day fact",
+      "MONTH": "standard source month fact or recomputed from affected governed facts as source contract requires",
+      "QUARTER": "standard comparable period facts",
+      "YEAR": "standard comparable period facts"
+    },
+    "company_total": {
+      "required_comparability": [
+        "period",
+        "currency",
+        "tax_basis",
+        "indicator_view",
+        "granularity",
+        "coverage"
+      ],
+      "included_sources": "all registered company-operating product lines that pass coverage and duplicate-inclusion gates",
+      "incomplete_status": "PARTIAL/COVERAGE_NOT_COMPARABLE",
+      "missing_as_zero": "FORBIDDEN",
+      "included_management_sources": [
+        "国内",
+        "国际"
+      ],
+      "unallocated_business_inclusion": "FORBIDDEN_UNTIL_APPROVED_DEDUPLICATION_AND_ATTRIBUTION_RULE"
+    },
+    "board_stable_key": "business_scope + cycle + period + metric_code",
+    "product_line_stable_key": "business_scope + product_line + sub_product_or_source + cycle + period + metric_code",
+    "write_mode": "UPSERT_CHANGED_STABLE_KEYS_ONLY",
+    "enterprise_ranking_stable_key": "date + entCode",
+    "receivable_anomaly_stable_key": "as_of_date + anomaly_type + source_document_id + source_detail_id + enterprise_code",
+    "department_profit": {
+      "domestic": "FULL_CURRENT_QUARTER_LIVE_QUERY_EACH_DAILY_RUN",
+      "international_2026_01_01_to_2026_07_31": "FROZEN_FACTS_ONLY",
+      "international_2026_08_01_onward": "PIGEON_DAILY_FACTS",
+      "previous_domestic_department_snapshot": "FORBIDDEN"
+    }
+  },
+  "quality_gates": {
+    "pagination": "returned rows must equal reported total",
+    "international_reconciliation": [
+      "overall_rows_to_enterprise_aggregate"
+    ],
+    "allowed_operating_partial_warning_codes": [
+      "CUSTOMER_PROFIT_RECONCILIATION_DIFFERENCE"
+    ],
+    "source_failure_fallback": "FORBIDDEN",
+    "base_write_readback": "REQUIRED",
+    "dashboard_readback": "REQUIRED",
+    "message_recipient_allowlist_and_readback": "REQUIRED_PER_AUDIENCE_WITH_CROSS_AUDIENCE_SCOPE_ISOLATION",
+    "partial_result_publish_as_complete": "FORBIDDEN",
+    "international_required_daily_queries": [
+      "daily_summary_minimal_identity_grain"
+    ],
+    "international_currency_label_authority": "NON_AUTHORITATIVE",
+    "international_governed_currency": "CNY",
+    "currency_governance": {
+      "raw_receipts_frozen_with_sha_and_labels": "REQUIRED",
+      "international_ledger_row_currency": "CNY",
+      "governed_document_period_daily_currency": "CNY",
+      "base_currency_field": "币种",
+      "base_currency_value": "CNY",
+      "base_currency_readback": "REQUIRED"
+    },
+    "international_amount_authority": "LATEST_COMPLETED_OVERALL_DAILY_RECEIPT_PER_DAY",
+    "international_amount_difference_policy": "SINGLE_AUTHORITATIVE_RECEIPT_NO_CROSS_ENDPOINT_COMPARISON",
+    "international_source_consistency_warning": {
+      "code": "PIGEON_SOURCE_CONSISTENCY_DIFFERENCE",
+      "required_when_nonzero": false,
+      "display": "NOT_APPLICABLE_SINGLE_SOURCE",
+      "publication_effect": "NONE"
+    },
+    "international_identity_coverage": "OVERALL_ROWS_CONTAIN_REQUIRED_IDENTITIES",
+    "managed_base_currency_backfill": {
+      "scope": "ALL_EXISTING_OPERATING_AMOUNT_ROWS_IN_BOTH_TARGET_TABLES",
+      "expected_current_snapshot_rows": 2490,
+      "expected_current_snapshot_breakdown": {
+        "经营指标底表（系统）": 2475,
+        "收入成本利润总览": 15
+      },
+      "metadata_backfill_count": "REQUIRED",
+      "amount_change_count": 0,
+      "readback": "ALL_BACKFILLED_ROWS_REQUIRED",
+      "jan_to_jun_month_row_creation": "FORBIDDEN",
+      "period_aggregate_readback": {
+        "scopes": [
+          "国际业务",
+          "公司整体"
+        ],
+        "periods": [
+          "MONTH",
+          "QUARTER",
+          "YEAR"
+        ],
+        "metric_codes": [
+          "OPERATING_INCOME",
+          "OPERATING_COST",
+          "OPERATING_PROFIT"
+        ],
+        "expected_stable_keys": 18
+      }
+    },
+    "managed_base_overview_projection": {
+      "table_id": "tblX7SBoErefdo7p",
+      "stable_key": "统计范围|统计周期|统计期间",
+      "day_source": "governed domestic_daily joined with international_daily by exact date",
+      "rolling_window_days": 4,
+      "day_scopes": [
+        "国内业务",
+        "国际业务",
+        "公司整体"
+      ],
+      "period_cycles": [
+        "MONTH",
+        "QUARTER",
+        "YEAR"
+      ],
+      "preserve_existing_rows_outside_window": true,
+      "dashboard_latest_day_filter_required": true,
+      "write_and_cloud_readback": "REQUIRED"
+    }
+  },
+  "display": {
+    "caliber_label": "公司经营情况",
+    "money_decimals": 2,
+    "rounding": "ROUND_HALF_UP",
+    "show_actual_coverage": true,
+    "show_included_and_excluded_sources": true,
+    "distinguish_states": [
+      "AVAILABLE",
+      "NO_DATA",
+      "NOT_READY",
+      "PARTIAL",
+      "FAILED"
+    ],
+    "not_ready_as_zero": "FORBIDDEN",
+    "company_scope_label_when_incomplete": "三部门管理口径",
+    "forbidden_copy": [
+      "0.90",
+      "1.09",
+      "10%",
+      "2026-07-29起仅使用Pigeon",
+      "9%",
+      "Pigeon-only",
+      "S-22.v8",
+      "业务经营含税口径",
+      "代缴利润",
+      "代缴成本",
+      "可抵扣增值税已剔除",
+      "国际历史固化至2026-07-28",
+      "客户含增值税付款除以1.09还原收入",
+      "财务未税经营损益"
+    ],
+    "management_card": {
+      "schema": "2.0",
+      "width_mode": "fill",
+      "contrast": "HIGH_CONTRAST_DARK_TEXT_ON_WHITE_GREY_OR_BRAND_TINT",
+      "period_summary_cycles": [
+        "MONTH",
+        "QUARTER",
+        "YEAR"
+      ],
+      "period_summary_layout": "VERTICAL_STRUCTURED_CARDS",
+      "trend_days": 15,
+      "trend_scopes": [
+        "国内业务",
+        "国际业务"
+      ],
+      "required_modules": [
+        "Q3 公司/部门利润达成",
+        "企业利润排行榜",
+        "企业负利润排行榜",
+        "销售合同",
+        "应收回款"
+      ],
+      "source_status_disclosure": "REQUIRED",
+      "forbidden_copy": [
+        "人工调整仅一次性计入，不按日放大。"
+      ],
+      "top_module": "Q3_COMPANY_AND_DEPARTMENT_PROFIT_ACHIEVEMENT",
+      "top_scopes": [
+        "公司整体",
+        "市场拓展部",
+        "重客部",
+        "运营部",
+        "国际短信项目组"
+      ],
+      "top_required_fields": [
+        "目标",
+        "实际利润",
+        "已完成利润",
+        "预计完成利润",
+        "预计达成率"
+      ],
+      "company_actual_source": "governed-operating.json",
+      "targets_adjustments_source": "dashboard-operating-target-query/operating-targets.json",
+      "department_unavailable_value": "NOT_READY_ONLY_WHEN_NO_EXACT_ACTUAL",
+      "reference_profit_detail_actual_use": "FORBIDDEN",
+      "palette": "FEISHU_DATA_CARD_WHITE_BLUE_GREEN_ORANGE_RED_HIGH_CONTRAST",
+      "manual_adjustment_display": "HIDDEN_CALCULATION_ONLY",
+      "customer_ranking_scope": "国内与国际企业",
+      "customer_ranking_fields": [
+        "企业名称",
+        "业务类型",
+        "收入",
+        "利润",
+        "近15日收入趋势"
+      ],
+      "customer_trend_source": "15 complete ENTERPRISE_PROFIT_DETAIL day facts by exact entCode; zero-fill forbidden",
+      "contract_risk_fields": [
+        "即将到期",
+        "有确认业务无有效合同",
+        "到期后仍有业务",
+        "未建立项目映射"
+      ],
+      "customer_ranking_container_id": "customer_profit_ranking",
+      "customer_ranking_layout": "VERTICAL_COMPLETE_ROWS_NO_TABLE_SCROLL",
+      "customer_ranking_row_count": 5,
+      "customer_table_component": "FORBIDDEN",
+      "customer_trend_visualization": "LINE_CHART_PER_ENTERPRISE",
+      "customer_trend_chart_count": 5,
+      "customer_trend_chart_days": 15,
+      "customer_row_layout": "MOBILE_SINGLE_COLUMN_NAME_THEN_METRICS_THEN_TREND",
+      "customer_row_column_count": 1,
+      "customer_trend_chart_height": "32px",
+      "customer_trend_numeric_labels": "HIDDEN",
+      "customer_trend_tooltip": "HIDDEN",
+      "customer_trend_persistence": "SAME_RUN_FROZEN_ARTIFACT_NOT_FEISHU_BASE",
+      "customer_trend_source_interface": "POST /api/bmp/bi/customer-profit/query",
+      "customer_trend_source_filters": "tax=true; timeType=Day; cycle=Day; source=Detail; OPERATING; CNY",
+      "customer_text_size": "normal",
+      "customer_row_vertical_spacing": "2px",
+      "customer_trend_y_field": "trendIndex",
+      "customer_trend_data_representation": "PER_CUSTOMER_MIN_MAX_NORMALIZED_0_TO_100_SHAPE_ONLY",
+      "customer_trend_raw_money_in_card": "FORBIDDEN",
+      "customer_trend_data_labels": "HIDDEN",
+      "department_partial_policy": "SHOW_EXACT_ATTRIBUTION_AND_ONE_UNASSIGNED_NOTICE",
+      "brand_colors": {
+        "primary_blue": "#3B82F6",
+        "income_green": "#22C55E",
+        "cost_and_risk_red": "#EF4444",
+        "profit_and_warning_orange": "#F59E0B"
+      },
+      "chart_series_colors": [
+        "#22C55E",
+        "#EF4444",
+        "#F59E0B"
+      ],
+      "semantic_color_mapping": {
+        "primary_and_information": "blue",
+        "profit_and_positive": "green",
+        "warning_and_partial": "orange",
+        "risk_and_error": "red",
+        "canvas": "white_with_minimal_neutral_separation"
+      },
+      "receivable_anomaly_fields": [
+        "已出账未确认",
+        "账单已确认未开发票",
+        "已开票未回款",
+        "企业数",
+        "单据数",
+        "剩余金额",
+        "企业业务员",
+        "异常原因",
+        "逾期天数",
+        "明细粒度"
+      ],
+      "mobile_layout_version": "MOBILE_STRUCTURED_CARDS_V4",
+      "top_scope_layout": "VERTICAL_STRUCTURED_CARDS",
+      "daily_scope_layout": "VERTICAL_STRUCTURED_CARDS",
+      "trend_layout": "VERTICAL_FULL_WIDTH_ROWS",
+      "business_status_layout": "NARROW_SCREEN_AUTO_STACK",
+      "money_display": "COMPACT_WAN_YI_TWO_DECIMALS",
+      "status_display": {
+        "AVAILABLE": "完整",
+        "PARTIAL": "部分归属",
+        "NOT_READY": "待就绪"
+      },
+      "native_table_modules": [],
+      "department_partial_notice_count": 1,
+      "native_table_container": "NOT_APPLICABLE",
+      "native_table_nested_in_column": "NOT_APPLICABLE",
+      "customer_ranking_title": "企业利润排行榜 Top 5",
+      "customer_ranking_order": "latest_profit_desc",
+      "customer_ranking_button_id": "open_customer_profit_view",
+      "customer_ranking_base_url": "https://rwizqz9fp1.feishu.cn/base/YiwrbOw7haPRXNsYKCjcmdG8nyd?table=tbl5pjcuozpWAI0j&view=vewbg9yJTV",
+      "negative_profit_ranking": {
+        "title": "企业负利润排行榜 Top 5",
+        "filter": "latest_profit < 0",
+        "order": "latest_profit_asc",
+        "fields": [
+          "企业名称",
+          "业务类型",
+          "收入",
+          "利润",
+          "近15日收入趋势"
+        ],
+        "container_id": "negative_profit_ranking",
+        "row_count": 5,
+        "button_id": "open_negative_profit_view",
+        "base_url": "https://rwizqz9fp1.feishu.cn/base/YiwrbOw7haPRXNsYKCjcmdG8nyd?table=tbl5pjcuozpWAI0j&view=vewE6tWGpQ",
+        "trend_chart_count": 5
+      },
+      "contract_summary_navigation": {
+        "base_token": "DKYAbKeizatJVAsfquRcTZYtnyg",
+        "target_type": "dashboard",
+        "dashboard_id": "blkJBGcAnLq8no8J",
+        "dashboard_name": "销售合同经营看板",
+        "button_id": "open_contract_base",
+        "button_text": "打开销售合同经营看板",
+        "url": "https://rwizqz9fp1.feishu.cn/base/DKYAbKeizatJVAsfquRcTZYtnyg?dashboard=blkJBGcAnLq8no8J",
+        "dashboard_readback": "REQUIRED"
+      },
+      "card_title_pattern": "经营日报 · M月D日",
+      "header_tag_color": "blue",
+      "section_title_text_size": "heading-3",
+      "department_attribution_layout": "INLINE_STRUCTURED_PER_DEPARTMENT",
+      "department_partial_tag": "已归属部分",
+      "department_partial_notice_template": "说明：公司存在未归属利润 {amount} 万元；部门卡仅展示已精确归属利润，未强制分配至部门。",
+      "four_day_detail_display": "FORBIDDEN"
+    },
+    "international_source_consistency": {
+      "nonzero_difference": "NOT_APPLICABLE_SINGLE_SOURCE",
+      "authoritative_value_copy": "金额采用Pigeon最新整体日明细",
+      "zero_difference": "NO_WARNING",
+      "card_enforcement": "NOT_APPLICABLE_SINGLE_SOURCE",
+      "management_element_id": "intl_source_warning",
+      "restricted_element_id": "intl_source_warning"
+    },
+    "receivable_anomaly_base": {
+      "code_preservation": "PRESERVE_IN_SOURCE_ARTIFACT_ONLY",
+      "unknown_code_policy": "FAIL_CLOSED",
+      "status_labels": {
+        "OVERDUE": "已逾期",
+        "NOT_READY": "暂无法判断"
+      },
+      "reason_labels": {
+        "BILLED_UNCONFIRMED_AFTER_ONE_CALENDAR_MONTH": "出账后超过1个自然月仍未确认",
+        "CONFIRMED_UNINVOICED_AFTER_ONE_CALENDAR_MONTH": "账单确认后超过1个自然月仍未开票",
+        "AGREED_INVOICE_PAST_CONTRACT_TERM_WITH_REMAINDER": "发票审核通过后超过合同账期仍有未回款金额",
+        "STATEMENT_APPROVE_TIME_NOT_EXPOSED": "对账单确认时间尚未提供，暂无法判断是否超期未开票"
+      }
+    },
+    "enterprise_profit_projection": {
+      "source_artifact": "enterprise-profit-ranking-15d.json",
+      "source_entity_semantics": "ENTERPRISE_BY_BUSINESS_TYPE",
+      "table_id": "tbl5pjcuozpWAI0j",
+      "stable_key": "data_date|business_type|enterprise_code",
+      "snapshot_policy": "CURRENT_DATA_DATE_ONLY",
+      "all_view_id": "vewbg9yJTV",
+      "negative_view_id": "vewE6tWGpQ",
+      "visible_fields": [
+        "企业名称",
+        "业务类型",
+        "收入",
+        "利润"
+      ],
+      "negative_filter": [
+        [
+          "利润",
+          "<",
+          0
+        ]
+      ],
+      "write_and_cloud_readback": "REQUIRED",
+      "all_sort": [
+        {
+          "field": "利润",
+          "desc": true
+        }
+      ],
+      "negative_sort": [
+        {
+          "field": "利润",
+          "desc": false
+        }
+      ],
+      "negative_view_name": "负利润企业（按利润升序）"
+    },
+    "international_restricted_card": {
+      "schema": "2.0",
+      "width_mode": "fill",
+      "title_prefix": "国际业务经营日报",
+      "trend_days": 15,
+      "allowed_scopes": [
+        "国际业务",
+        "国际短信项目组"
+      ],
+      "required_markers": [
+        "国际业务经营日报",
+        "仅含国际业务与国际短信项目组",
+        "国际短信项目组",
+        "国际业务当日经营",
+        "国际业务累计经营",
+        "国际业务近15日收入/成本/利润"
+      ],
+      "forbidden_markers": [
+        "国内业务",
+        "公司整体",
+        "市场拓展部",
+        "重客部",
+        "运营部",
+        "总经办",
+        "销售合同",
+        "合同风险",
+        "应收回款",
+        "应收异常",
+        "rwizqz9fp1.feishu.cn/base"
+      ],
+      "allowed_element_ids": [
+        "intl_q3_achievement",
+        "intl_q3_table",
+        "intl_daily",
+        "intl_daily_table",
+        "intl_period",
+        "intl_period_table",
+        "intl_chart",
+        "intl_scope_notice",
+        "intl_source_warning"
+      ],
+      "navigation": "FORBIDDEN_UNLESS_RESOURCE_LEVEL_ACCESS_IS_PROVEN",
+      "forwarding": "DISABLED",
+      "enterprise_ranking": "OMITTED_TO_MINIMIZE_AUTHORIZED_DATA_AND_CARD_COMPLEXITY",
+      "four_day_detail_display": "FORBIDDEN"
+    }
+  },
+  "runtime_gate": {
+    "validator": "scripts/validate_operating_dashboard_governance.py",
+    "required_governed_operating_output": "governed-operating.json",
+    "required_profit_achievement_output": "company-profit-achievement.json",
+    "required_candidate_manifest": "governed-operating-candidate-manifest.json",
+    "fail_closed": true,
+    "active_runner": "scripts/run_daily_dashboard_delivery_current.py",
+    "required_domestic_revision_output": "domestic-daily-ledger.json",
+    "required_domestic_day_metric_codes": [
+      "OPERATING_INCOME",
+      "CHANNEL_COST",
+      "CUSTOMER_REBATE",
+      "OPERATING_COST",
+      "OPERATING_PROFIT"
+    ],
+    "active_card_builder": "scripts/build_management_daily_card_current.py",
+    "required_operating_targets_output": "operating-targets.json",
+    "required_customer_daily_output": "enterprise-daily-15d.json",
+    "required_contract_risk_output": "contract-risk.json",
+    "required_domestic_department_profit_output": "domestic-q3-department-profit.json",
+    "required_contract_risk_base_sync": "scripts/sync_contract_risk_base.py",
+    "required_acquisition_manifest": "acquisition-manifest.json",
+    "required_international_day_audit_pattern": "international-pigeon-<data-date>.json",
+    "required_international_department_mapping_output": "international-department-mapping.json",
+    "required_international_department_profit_output": "international-q3-department-profit.json",
+    "required_pigeon_raw_receipt_patterns": [
+      "pigeon-daily-overall-<data-date>.json"
+    ],
+    "required_international_enterprise_daily_output": "international-enterprise-daily-15d.json",
+    "required_enterprise_profit_ranking_output": "enterprise-profit-ranking-15d.json",
+    "required_international_restricted_card_output": "international-restricted-card-<data-date>.json",
+    "active_international_restricted_card_builder": "scripts/build_international_restricted_card.py",
+    "domestic_department_profit_refresh": {
+      "mode": "FULL_CURRENT_QUARTER_LIVE_API_QUERY",
+      "interface": "POST /api/bmp/bi/customer-profit/query",
+      "aggregation": "SUM_smsProfit_BY_belongDepartment_AND_date",
+      "historical_snapshot_reuse": "FORBIDDEN",
+      "required_output": "refresh_mode=FULL_Q3_LIVE_BMP_QUERY"
+    }
+  },
+  "history_policy": "NO_RESTATEMENT",
+  "evidence": {
+    "candidate_fact_directory": "outputs/overall-authority-20260810-6-candidate",
+    "previous_verified_fact_directory": "outputs/daily-push-20260803-run-20260804",
+    "canonical_document": "docs/经营看板全景基线.md",
+    "candidate_display_copy": "config/operating-dashboard-rules/2026-08-10.9-display-copy.json",
+    "supporting_documents": [
+      "docs/260629 经营数据看板简版需求.md",
+      "docs/经营数据看板实施方案.md",
+      "docs/经营看板第一步-口径与缺口确认台账.md",
+      "docs/经营看板MCP工具与Skill接入现状.md",
+      "docs/经营看板产品线与字节直连月度数据接入方案.md"
+    ],
+    "candidate_card": "outputs/display-only-mobile-card-20260817-9/management-daily-card-2026-08-16.json"
+  },
+  "domain_delivery": {
+    "domains": [
+      "domestic",
+      "customer",
+      "sales_contract",
+      "receivable",
+      "international"
+    ],
+    "base_write_gate": "EACH_DOMAIN_GATE_PASSED",
+    "failure_isolation": {
+      "international": [
+        "international",
+        "company",
+        "profit_achievement",
+        "management_card",
+        "message_send"
+      ]
+    },
+    "independent_on_international_failure": [
+      "domestic",
+      "customer",
+      "sales_contract",
+      "receivable"
+    ],
+    "partial_business_status_allowed_after_domain_gate": [
+      "sales_contract",
+      "receivable"
+    ],
+    "partial_result_publish_as_complete": "FORBIDDEN",
+    "international_receipt_policy": {
+      "billing_daily_query_batch": "SAME_INTERNATIONAL_DOMAIN_RECEIPT",
+      "billing_mcp_daily_detail_monetary_use": "REQUIRED",
+      "cloudmsg_dependency": "NONE",
+      "required_reconciliation": [
+        "overall_rows_to_enterprise_aggregate"
+      ]
+    }
+  },
+  "validated_receipt_reuse": {
+    "allowed": true,
+    "required_receipt_status": "DOMAIN_GATE_PASSED",
+    "reuse_key_fields": [
+      "domain",
+      "data_date",
+      "semantic_bundle_version",
+      "semantic_bundle_sha256",
+      "query_contract_sha256",
+      "artifact_sha256"
+    ],
+    "query_contract_sha256_derivation": "SHA256_CANONICAL_JSON_OF_EXACT_DOMAIN_QUERY_PLAN",
+    "required_artifact_hash_readback": true,
+    "raw_artifact_or_failed_manifest_reuse": "FORBIDDEN",
+    "failed_manifest_domain_artifact_adoption": "ONLY_VIA_NEW_CANDIDATE_DOMAIN_GATE_RECEIPT",
+    "cross_domain_artifact_mixing": "FORBIDDEN",
+    "ruleset_identity_role": "AUDIT_ONLY_NOT_SOURCE_CACHE_INVALIDATOR",
+    "compatible_source_manifests": [
+      {
+        "ruleset_version": "2026-08-11.6",
+        "ruleset_sha256": "1311aca6da465ba1a33feb3bd67f1c9c85c28e73fc9d0b376970e6161af2fa92",
+        "allowed_when": "EXACT_SEMANTIC_AND_QUERY_CONTRACT_HASH_MATCH"
+      }
+    ]
+  },
+  "created_at": "2026-08-27T10:31:00+08:00",
+  "approved_by": "user-requested-full-management-recipient",
+  "change_summary": "修正汪姐的投递标识：用户身份查询所得open_id被经营数据看板机器人以99992361拒绝，改用唯一企业邮箱由同一机器人解析；完整管理权限和其他收件人不变。经营来源、公式、历史事实、Base、仪表盘和卡片内容不变。",
+  "department_attribution": {
+    "quarter": "2026-Q3",
+    "domestic": "BMP_CUSTOMER_PROFIT_EXACT_DEPARTMENT",
+    "international": "REFERENCE_BASE_EXACT_ENTERPRISE_ID",
+    "frozen_account_daily_artifact": "outputs/international-history-restatement-20260101-20260731-s22-v7-candidate/international-account-daily-s22-v7.csv",
+    "historical_account_bridge": "EXACT_ACCOUNT_ID_TO_UNIQUE_PIGEON_ENTERPRISE_ID_OR_EXACT_GJ_ID",
+    "name_inference": "FORBIDDEN",
+    "unassigned_policy": "PRESERVE_AND_DISCLOSE",
+    "company_reconciliation": "ATTRIBUTED_PLUS_UNASSIGNED_EQUALS_GOVERNED_COMPANY_ACTUAL",
+    "contract_version": "department-profit-attribution.v3",
+    "allowed_departments": [
+      "市场拓展部",
+      "重客部",
+      "运营部",
+      "国际短信项目组"
+    ]
+  },
+  "managed_base_currency": {
+    "tables": [
+      "经营指标底表（系统）",
+      "收入成本利润总览"
+    ],
+    "field": "币种",
+    "value": "CNY",
+    "field_type": "text",
+    "schema_ensure_before_upsert": "REQUIRED",
+    "readback": "REQUIRED_FOR_ALL_SAME_RUN_ROWS",
+    "unit_field": "PRESERVED_SEPARATELY",
+    "backfill_scope": "ALL_EXISTING_OPERATING_AMOUNT_ROWS_IN_BOTH_TARGET_TABLES",
+    "expected_current_snapshot_rows": 2490,
+    "metadata_backfill_count_receipt": "REQUIRED",
+    "amount_change_count": 0,
+    "readback_scope": "ALL_BACKFILLED_ROWS",
+    "jan_to_jun_month_row_creation": "FORBIDDEN",
+    "international_company_mqy_readback_keys": 18
+  },
+  "execution_governance": {
+    "change_impact": "PUBLISH_SAFETY",
+    "ruleset_freeze": "PIN_VERSION_AND_SHA_AT_RUN_START",
+    "activation_during_run": "QUEUE_UNTIL_CURRENT_RUN_TERMINAL",
+    "fingerprint_layers": [
+      "source_contract_sha256",
+      "semantic_formula_sha256",
+      "display_contract_sha256",
+      "publish_safety_sha256"
+    ],
+    "source_domain_concurrency": {
+      "enabled": true,
+      "max_workers": 2,
+      "domains": [
+        "domestic_customer",
+        "contract_receivable",
+        "metadata"
+      ],
+      "writes_during_acquisition": "FORBIDDEN",
+      "manifest_writer": "PARENT_LOCKED_ATOMIC_REPLACE"
+    },
+    "checkpoint_resume": {
+      "enabled": true,
+      "scope": "SAME_RUN_EXACT_FINGERPRINT_ONLY",
+      "successful_domain_requery": "FORBIDDEN",
+      "failed_or_interrupted_domain": "RERUN_DOMAIN_ONLY",
+      "artifact_readback": [
+        "bytes",
+        "sha256"
+      ],
+      "publish_side_effects_before_source_freeze": "FORBIDDEN"
+    },
+    "international_provisional_window": {
+      "hours": 72,
+      "latest_pigeon_query_required": true,
+      "cross_run_cache_reuse": "FORBIDDEN"
+    },
+    "time_budget_minutes": {
+      "normal_daily_total": 30,
+      "display_only": 8,
+      "warning_only_no_gate_bypass": true
+    },
+    "frozen_run_execution_recovery": {
+      "enabled": true,
+      "scope": "SAME_RULESET_EXACT_FINGERPRINT_ONLY",
+      "required_source_status": "SOURCES_FROZEN",
+      "required_fingerprint_layers": [
+        "source_contract_sha256",
+        "semantic_formula_sha256",
+        "display_contract_sha256",
+        "publish_safety_sha256"
+      ],
+      "source_artifact_readback": [
+        "bytes",
+        "sha256"
+      ],
+      "source_requery": "FORBIDDEN",
+      "remote_migration_reuse": "ALLOWED_ONLY_WITH_SUCCESS_READBACK",
+      "terminal_or_pending_message_recovery": "SEPARATE_READBACK_REQUIRED",
+      "recovery_receipt": "execution-recovery-receipt.json"
+    }
+  },
+  "history_restatement": {
+    "period_start": "2026-06-01",
+    "period_end": "2026-07-31",
+    "scope": "DIRECT_ENTERPRISE_SCOREBOARD_ONLY",
+    "old_customer_id_rows": "SUPERSEDED"
+  },
+  "task_boundary": {
+    "task": "经营日报",
+    "direct_enterprise_scoreboard_dependency": "FORBIDDEN",
+    "direct_scoreboard_rules_dependency": "FORBIDDEN"
+  },
+  "delivery": {
+    "profile": "operating-dashboard-bot",
+    "identity": "bot",
+    "total_recipient_count": 5,
+    "cross_audience_payload_identical": "FORBIDDEN",
+    "message_readback": [
+      "sender",
+      "chat_id",
+      "msg_type",
+      "content",
+      "content_sha256"
+    ],
+    "audiences": [
+      {
+        "id": "full_management",
+        "card_kind": "management",
+        "card_filename": "management-daily-card-{data_date}.json",
+        "recipients": [
+          {
+            "name": "寇誉博",
+            "open_id": "ou_26598c51e2aa495bf9b499e25baca09e"
+          },
+          {
+            "name": "金长春",
+            "open_id": "ou_a74fb504d29d52fc04ff0356e1c11497"
+          },
+          {
+            "name": "汪姐",
+            "id_type": "email",
+            "id": "wanglifeng@yuexin.cn"
+          }
+        ],
+        "rendered_required_markers": [
+          "经营日报",
+          "国内业务",
+          "国际业务",
+          "销售合同与风险",
+          "应收回款"
+        ],
+        "rendered_forbidden_markers": [],
+        "content_equivalence": "BYTE_IDENTICAL_WITHIN_AUDIENCE",
+        "idempotency_ruleset_version": "2026-08-17.5",
+        "idempotency_migration_reason": "REUSE_INTERRUPTED_2026-08-17.5_SEND_KEYS_TO_PREVENT_DUPLICATE_FULL_CARD",
+        "expected_recipient_count": 3,
+        "recipient_resolution": {
+          "profile": "operating-dashboard-bot",
+          "cross_application_open_id": "FORBIDDEN",
+          "recipients": [
+            {
+              "name": "汪姐",
+              "source": "user contact exact email match; bot send resolves enterprise email",
+              "verified_email": "wanglifeng@yuexin.cn",
+              "user_identity_open_id_audit_only": "ou_8e5a2d946c3a32dded7f9e1bd7c95ca9",
+              "identifier_type": "email",
+              "identifier": "wanglifeng@yuexin.cn",
+              "department": "总经办",
+              "is_activated": true,
+              "is_cross_tenant": false,
+              "cross_application_open_id_result": "REJECTED_99992361",
+              "availability_gate": "MESSAGE_SEND_AND_READBACK_REQUIRED"
+            }
+          ]
+        }
+      },
+      {
+        "id": "international_restricted",
+        "card_kind": "international_restricted",
+        "card_filename": "international-restricted-card-{data_date}.json",
+        "recipients": [
+          {
+            "name": "武国芳",
+            "open_id": "ou_480470d29fc6022beef92d2acfd143b2"
+          },
+          {
+            "name": "杨红梅",
+            "id_type": "email",
+            "id": "yanghongmei@yuexin.cn"
+          }
+        ],
+        "rendered_required_markers": [
+          "国际业务经营日报",
+          "国际业务",
+          "国际短信项目组"
+        ],
+        "rendered_forbidden_markers": [
+          "国内业务",
+          "公司整体",
+          "市场拓展部",
+          "重客部",
+          "运营部",
+          "总经办",
+          "销售合同",
+          "合同风险",
+          "应收回款",
+          "应收异常",
+          "rwizqz9fp1.feishu.cn/base"
+        ],
+        "content_equivalence": "BYTE_IDENTICAL_WITHIN_AUDIENCE",
+        "recipient_resolution": {
+          "profile": "operating-dashboard-bot",
+          "cross_application_open_id": "FORBIDDEN",
+          "recipients": [
+            {
+              "name": "武国芳",
+              "source": "contact +get-user by tenant user_id",
+              "verified_email": "wuguofang@yuexin.cn",
+              "verified_user_id": "2fb1cc33",
+              "identifier_type": "open_id",
+              "identifier": "ou_480470d29fc6022beef92d2acfd143b2",
+              "is_activated": true
+            },
+            {
+              "name": "杨红梅",
+              "source": "user contact exact email match; bot send resolves enterprise email",
+              "verified_email": "yanghongmei@yuexin.cn",
+              "user_identity_open_id_audit_only": "ou_0965652dcc34f01d95f85634e44570b2",
+              "identifier_type": "email",
+              "identifier": "yanghongmei@yuexin.cn",
+              "is_activated": true,
+              "is_cross_tenant": false,
+              "bot_user_id_resolution": "UNAVAILABLE_MISSING_CONTACT_USER_ID_READ_SCOPE",
+              "missing_scope": "contact:user.id:readonly",
+              "availability_gate": "MESSAGE_SEND_AND_READBACK_REQUIRED"
+            }
+          ]
+        },
+        "profile": "operating-dashboard-bot",
+        "sender_name": "经营数据看板",
+        "operating_dashboard_bot_availability": "REQUIRED_PER_RECIPIENT_READBACK",
+        "expected_recipient_count": 2
+      }
+    ],
+    "sender_equivalence": "REQUIRED_ACROSS_ALL_AUDIENCES"
+  }
+}

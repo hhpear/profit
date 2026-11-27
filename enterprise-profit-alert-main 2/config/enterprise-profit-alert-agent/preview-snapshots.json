@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "status": "ACTIVE",
+  "snapshots": {
+    "2026-08-31": {
+      "history_path": "outputs/enterprise-profit-alert-daily-2026-09-01-for-2026-08-31/enterprise-profit-calendar-history.json",
+      "history_sha256": "ddb1ffb83d1715cb4ea1922afda516bbc1c651a3f2211bfd3b73e119afcc095e",
+      "source_status": "GOVERNED_COMPLETE_DAY"
+    },
+    "2026-09-01": {
+      "history_path": "outputs/enterprise-profit-alert-daily-2026-09-02-for-2026-09-01/enterprise-profit-calendar-history.json",
+      "history_sha256": "7e755b120aef9b969f6caf2e0a1d7ba47195607eb535d94338268ab251fb3d1b",
+      "source_status": "GOVERNED_COMPLETE_DAY"
+    }
+  }
+}
