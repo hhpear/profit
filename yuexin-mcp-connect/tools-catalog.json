@@ -1,0 +1,423 @@
+[
+  {
+    "name": "admin__disable_service",
+    "description": "禁用一个已注册的下游 MCP 服务。禁用后该服务下所有工具对所有调用者不可见，直到调用 admin__enable_service 恢复。\n\n✅ 适用场景：\n- 「关停 datacenter 服务」\n- 「临时下线 ops 服务以便排障」\n\n❌ 不适用（请改用对应工具）：\n- 「禁用某个具体工具 / 改某工具的 scope」→ admin__update_tool_authz\n- 「撤销某用户的角色」→ admin__manage_permission",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "service_name": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  {
+    "name": "admin__enable_service",
+    "description": "恢复此前被 admin__disable_service 禁用的下游 MCP 服务，重新让其下所有工具对调用者可见。\n\n✅ 适用场景：\n- 「开启 datacenter 服务」\n- 「把 ops 服务恢复上线」\n\n❌ 不适用：\n- 「启用某个具体工具」→ 服务恢复后工具默认可见；个别工具授权用 admin__update_tool_authz",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "service_name": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  {
+    "name": "admin__list_services",
+    "description": "列出当前网关聚合的所有下游 MCP 服务及其运行状态（healthy / unhealthy / disabled）。只返回服务级信息，不返回工具级明细。\n\n✅ 适用场景（典型用户原话）：\n- 「当前网关下接了哪些服务？」\n- 「我能看到哪些 MCP 服务？各自在线吗？」\n- 「哪个下游服务状态不对 / 被禁用了？」\n\n❌ 不适用（请改用对应工具）：\n- 「某服务里有哪些工具 / 某工具的权限配置」→ admin__view_tool_authz\n- 「管理用户角色、权限授权」→ admin__manage_permission\n- 「查短信发送量 / 明细」→ 请直接调对应业务工具，不是 admin 范畴",
+    "inputSchema": {
+      "type": "object",
+      "properties": {}
+    }
+  },
+  {
+    "name": "admin__manage_permission",
+    "description": "通过自然语言管理【用户角色、数据权限、权限树】。覆盖：查询用户当前角色/权限、给用户分配或撤销角色、创建/编辑/删除角色、授予或收回具体账号/部门等数据权限、查询权限树结构。\n\n✅ 适用场景（典型用户原话）：\n- 「给张三分配数据中心管理员角色」\n- 「帮用户 zhangsan 加一下 jbdl01 这个账号的短信查询权限」\n- 「列出数据中心所有角色 / 查看李四当前有哪些权限」\n- 「创建一个数据中心只读角色」\n- 「撤销王五的短信导出权限」\n\n❌ 不适用（请改用对应工具）：\n- 「改某工具本身的授权元数据（privilege_code / scope_required）」→ admin__update_tool_authz\n- 「启停某服务」→ admin__enable_service / admin__disable_service\n- 「查询短信发送量 / 明细」→ 直接调业务工具，不是权限管理范畴\n\n⚠️ 用户名传入规范：instruction 中的人名（如「张三」「马庆」）直接以文本写入，不要在调用前通过飞书 Contact API 将其预先解析为飞书用户对象。用户身份解析由工具内部通过平台 UserService 按姓名查找完成，预解析不仅多余，还会触发不必要的飞书 contact:user:search 授权弹窗。\n\n写操作会直接执行，请在传入指令前先向用户澄清意图。",
+    "inputSchema": {
+      "type": "object",
+      "required": [
+        "instruction"
+      ],
+      "properties": {
+        "instruction": {
+          "type": "string",
+          "description": "自然语言权限管理指令，如'给张三分配数据中心管理员角色'或'给 zhangsan 加 jbdl01 账号的查询权限'。指令中的人名直接以文本传入，工具内部自行解析用户身份。"
+        }
+      }
+    }
+  },
+  {
+    "name": "admin__update_tool_authz",
+    "description": "修改一个工具的授权配置（权限码 / 作用域维度 / 是否强制 scope / 是否允许管理员绕过）。写操作，立即生效，谨慎使用。\n\n✅ 适用场景：\n- 「把 datacenter__query_sms_analytics 改成必须按部门 scope 查询」\n- 「允许管理员直接调 extract_sms_landing_elements，不做 scope 收敛」\n- 「更新某工具的 privilege_code 为 xxx.yyy.zzz」\n\n❌ 不适用（请改用对应工具）：\n- 「给用户赋予角色 / 权限」→ admin__manage_permission\n- 「启停整个服务」→ admin__enable_service / admin__disable_service\n- 「查看当前授权配置」→ admin__view_tool_authz",
+    "inputSchema": {
+      "type": "object",
+      "required": [
+        "full_name",
+        "privilege_code"
+      ],
+      "properties": {
+        "full_name": {
+          "type": "string"
+        },
+        "privilege_code": {
+          "type": "string"
+        },
+        "scope_required": {
+          "type": "boolean"
+        },
+        "scope_dimension": {
+          "type": "string"
+        },
+        "admin_bypass_allowed": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  {
+    "name": "admin__view_tool_authz",
+    "description": "查看某个下游服务下所有工具的授权配置（privilege_code / scope_dimension / scope_required / admin_bypass_allowed），用于审计当前权限布控。\n\n✅ 适用场景：\n- 「datacenter 服务下各工具现在的权限配置是什么」\n- 「ops 下哪些工具需要 scope 收敛？哪些允许 admin 绕过？」\n\n❌ 不适用（请改用对应工具）：\n- 「修改某工具的权限配置」→ admin__update_tool_authz\n- 「列出所有服务本身」→ admin__list_services\n- 「给用户加角色 / 授权」→ admin__manage_permission",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "service_name": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  {
+    "name": "datacenter__query_sms_analytics",
+    "description": "短信业务【多维 OLAP 聚合查询】唯一入口。覆盖四大领域，凡是涉及「数字 / 比例 / 金额 / 趋势 / 排行 / 对比」的查询都用本工具：\n\n1) 运营指标：发送量(send_count) / 计费量 / 成功数 / 失败数 / 未知数 /\n   回执数 / 失败转发数 / 平台失败数 / 投诉数 / 上行数 / 退订 / 轰炸 …\n2) 质量指标：成功率 / 失败率 / 未知率 / 转发成功率 / 平台失败率 /\n   回执率 / 百投比(投诉/百万)…\n3) 销售指标：总收入 / 总成本(销售口径 + 运营口径) / 总利润(销售口径 + 运营口径) /\n   平均每条收入 / 平均每条成本 / 平均每条利润 …\n4) 上行与投诉：12321 投诉 / 退订 / 轰炸 / 可能投诉 / 投诉来源 / 上行类型 …\n\n支持 30+ 维度切分（账号 / 通道 / 企业 / 供应商 / 业务员 / 签名 / 接入号 /\n产品 / 错误码 / 省份 / 城市 / 运营商 / 时间粒度 minute|hour|day|month / …）。\n支持 6 种过滤操作符（eq / in / gt / gte / lt / lte / between）。\n\n✅ 适用场景（典型用户原话）：\n- 「今天 jbdl01 的短信发送量和成功数」\n- 「本周各通道的成功率，按成功率倒排」\n- 「本月每个账号的销售收入和利润是多少」\n- 「上周各签名的百投比 TOP 10」\n- 「过去 30 天度小满签名在各省份的失败率分布」\n- 「2026-04 这一个月的总收入、总成本、总利润」\n- 「按小时看今天上海移动网络的发送趋势」\n\n❌ 不适用（请改用对应工具）：\n- 「某手机号收到的具体短信 / 单条短信失败原因 / 明细记录」→ datacenter__query_sms_records\n- 「从短信正文提取手机号 / 链接 / 400 电话 / 域名（合规审查）」→ ops__extract_sms_landing_elements\n\n调用要求:\n- 通过 HTTP `Authorization: Bearer <Gateway Context JWT>` 传递 Gateway 上下文\n\n输入字段:\n- query: string，自然语言统计查询描述\n- confirmation: object，可选；显式确认待执行计划，必须包含 query_id、plan_hash、state_version\n\n异步调用流程:\n1. 调用 query_sms_analytics(query) → 立即返回 execution_mode=executing 及 job_id（< 1 秒）\n2. 反复调用 query_sms_analytics_result(job_id) 直到 status=done 或 status=error\n3. 若结果 execution_mode=clarify → 补充信息后重新调用 query_sms_analytics\n4. 若结果 execution_mode=pending_confirmation → 带 confirmation 参数再次调用 query_sms_analytics\n\n输出字段:\n- trace_id\n- tool_name\n- query_id / job_id（executing 模式时相同）\n- execution_mode（executing 表示异步进行中）\n- message\n- job_id（仅 executing 模式有值）\n\n统一错误码:\n- AUTH_CONTEXT_INVALID\n- PERMISSION_DENIED\n- INVALID_QUERY_PLAN\n- DOWNSTREAM_UNAVAILABLE\n- MODEL_INVOCATION_FAILED\n\n示例响应（异步提交成功）:\n{\n  \"trace_id\": \"trace-demo-001\",\n  \"tool_name\": \"query_sms_analytics\",\n  \"query_id\": \"job-abc123\",\n  \"execution_mode\": \"executing\",\n  \"message\": \"查询已提交，正在规划中，请稍后调用 query_sms_analytics_result 查询结果。\",\n  \"job_id\": \"job-abc123\",\n  \"clarification\": null,\n  \"confirmation\": null,\n  \"result\": null\n}\n\n示例错误响应:\n{\n  \"code\": \"DOWNSTREAM_UNAVAILABLE\",\n  \"category\": \"downstream\",\n  \"message\": \"Open SDK base URL or credentials are not configured\",\n  \"trace_id\": \"trace-bootstrap-001\"\n}\n\n补充样例文档: docs/examples/query_stat-samples.md",
+    "inputSchema": {
+      "type": "object",
+      "required": [
+        "query"
+      ],
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "用户自然语言统计查询描述。"
+        },
+        "confirmation": {
+          "anyOf": [
+            {
+              "type": "object",
+              "required": [
+                "query_id",
+                "plan_hash",
+                "state_version"
+              ],
+              "properties": {
+                "query_id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "待确认查询计划的 query_id。"
+                },
+                "plan_hash": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "待确认查询计划的稳定哈希。"
+                },
+                "state_version": {
+                  "type": "integer",
+                  "description": "待确认查询会话的当前状态版本。",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "description": "Typed confirmation reference for a previously persisted pending plan.",
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "可选的显式确认引用，用于执行此前返回 pending_confirmation 的查询计划。"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "datacenter__query_sms_analytics_result",
+    "description": "轮询 query_sms_analytics 异步作业结果。\n\n调用要求:\n- 通过 HTTP `Authorization: Bearer <Gateway Context JWT>` 传递 Gateway 上下文\n\n输入字段:\n- job_id: string，query_sms_analytics 返回的 job_id\n\n输出字段:\n- job_id: 作业 ID\n- status: pending（进行中）| done（完成）| error（失败）\n- message: 用户可读状态描述\n- result: 完整 QueryStatResponse（status=done 时有值）\n- error: 错误描述（status=error 时有值）\n\n轮询建议:\n- status=pending：等待 5-10 秒后重试\n- status=done：result 包含最终结果（clarify/pending_confirmation/executable）\n- status=error：查询失败，可重新调用 query_sms_analytics",
+    "inputSchema": {
+      "type": "object",
+      "required": [
+        "job_id"
+      ],
+      "properties": {
+        "job_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "query_sms_analytics 返回的异步作业 ID。"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "datacenter__query_sms_records",
+    "description": "短信【发送明细】查询的唯一入口：按手机号/账号/时间查单条短信的发送状态、\n失败原因、发送时间、通道、接入号等明细字段。\n\n✅ 适用场景：\n- 「手机号 138xxxx 今天的短信发送状态 / 发送明细 / 是否失败」\n- 「账号 xxx 某时间段内失败的短信明细 / 失败原因分布」\n- 「排查某条短信为什么没到达 / 卡在哪个环节」\n\n❌ 不适用（请改用对应工具）：\n- 「今天 xxx 的发送量 / 成功率 / 汇总统计」→ datacenter__query_sms_analytics\n- 「从短信正文提取 400 电话 / 引流链接」→ ops__extract_sms_landing_elements\n\n面向短信发送明细排查场景的 Gateway 下游 MCP 工具。\n\n调用要求:\n- 通过 HTTP `Authorization: Bearer <Gateway Context JWT>` 传递 Gateway 上下文\n\n输入字段:\n- query: string，用户自然语言明细查询描述\n\n输出字段:\n- trace_id\n- tool_name\n- query_id\n- execution_mode\n- message\n- result.summary | result.query_conditions | result.pagination | result.records\n\n统一错误码:\n- AUTH_CONTEXT_INVALID\n- PERMISSION_DENIED\n- INVALID_QUERY_PLAN\n- DOWNSTREAM_UNAVAILABLE\n- MODEL_INVOCATION_FAILED\n\n示例成功响应:\n{\n  \"trace_id\": \"trace-detail-001\",\n  \"tool_name\": \"query_sms_records\",\n  \"query_id\": \"qry-detail-001\",\n  \"execution_mode\": \"executable\",\n  \"message\": \"明细查询已执行完成。\",\n  \"result\": {\n    \"summary\": \"明细查询执行成功，当前页返回 1 条记录，第 1 页，每页 100 条，共 1 条。\",\n    \"query_conditions\": {\n      \"raw_query\": \"查一下 13812345678 昨天下午的短信发送明细\",\n      \"normalized_summary\": \"phone=138****5678；时间范围 2026-04-02 至 2026-04-02；time_window=afternoon；channel=sms；status=无；page=1；page_size=100。\"\n    },\n    \"pagination\": {\n      \"page\": 1,\n      \"page_size\": 100,\n      \"total\": 1,\n      \"has_more\": false\n    },\n    \"records\": [\n      {\n        \"send_time\": \"2026-04-02T15:30:00+08:00\",\n        \"status\": \"failed\",\n        \"channel\": \"sms\",\n        \"phone_number\": \"138****5678\",\n        \"failure_reason\": \"运营商返回手机号 138****5678 状态异常\"\n      }\n    ]\n  }\n}\n\n示例错误响应:\n{\n  \"code\": \"AUTH_CONTEXT_INVALID\",\n  \"category\": \"authentication\",\n  \"message\": \"Gateway context is missing or invalid\",\n  \"trace_id\": \"trace-detail-auth-001\"\n}\n\n补充样例文档: docs/examples/query_detail-samples.md",
+    "inputSchema": {
+      "type": "object",
+      "required": [
+        "query"
+      ],
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 1,
+          "description": "用户自然语言明细查询描述。"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "ops__check_sms_sign_config",
+    "description": "🔍 查询旧平台短信账号/接入号的签名+扩展+引流报备状态（Redis 实时数据）。\n\n✅ 适用场景：\ndiagnose_sms_failure 诊断出「GB:0017 签名不匹配」后，运营追问细节时使用。\n流程严格对齐 SelectProduct.java checkSchedule0 逻辑：\n  Step 1  账号报备开关类型（account_info.SIGNISUSE）\n  Step 2  账号签名报备详情（sign:{account}:{md5_16(sign)}）\n  Step 3  接入号 signType（mt_spnum:{sp_number}.signtype）\n  Step 4  接入号签名/扩展报备状态\n  Step 5  引流模版要素（sp:subid:template / sp:sign:template）\n\n❌ 不适用：新平台（yuexin-* 阿里云服务）。\n\n输入说明：\n- account：账号（从 diagnose_sms_failure 结果中取）\n- sign：签名文本（从 diagnose_sms_failure 结果中取）\n- product_code 或 sp_number 二选一（运营根据追问场景提供）\n  - product_code：产品编码（工具自动查 mt:product:{code}.spnumberCode → 接入号）\n  - sp_number：接入号编码（直接使用）\n- subid：本次短信的扩展码（可为空字符串）\n\n输出：逐步骤文本报告，明确显示每个 Redis key 的查询结果和 ✅/❌ 判断。\n",
+    "inputSchema": {
+      "type": "object",
+      "required": [
+        "account",
+        "sign"
+      ],
+      "properties": {
+        "sign": {
+          "type": "string",
+          "description": "签名文本（明文），从诊断结果中取"
+        },
+        "subid": {
+          "type": "string",
+          "default": "",
+          "description": "本次短信使用的扩展码，无扩展传空字符串"
+        },
+        "account": {
+          "type": "string",
+          "description": "账号，从 diagnose_sms_failure 诊断结果中取"
+        },
+        "sp_number": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "接入号编码（与 product_code 二选一）"
+        },
+        "product_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "产品编码（与 sp_number 二选一），工具自动查接入号"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "ops__diagnose_sms_failure",
+    "description": "🔍 旧平台短信发送失败一站式诊断（仅支持 yuexin-old / centerserver / pushserver / cmppserver）。\n\n❌ 不适用场景：\n- 新平台 yuexin-* 阿里云服务的诊断（应该用对应服务的日志查询）\n- 短信发送量统计 / 引流要素提取（用 datacenter__query_sms_analytics 等）\n\n✅ 适用：运营反馈「某条短信没收到 / 失败回执」要找根因。\n  也可回答「为什么没走到 / 没补发到某产品」类反事实问题（传 question 携带运营原始问话即可）。\n\n工作机制：\n1. 取证：并行查 Hologres yuexin_olap.sms 主记录 + Loki centerserver 日志\n2. 翻译：错误码字典翻译 + 17 环节定位\n3. LLM Round 1：基于日志 / 已读数据决策是否需要查 Redis\n4. 必要时按 LLM 选择的候选 keys 查 Redis 实时配置\n5. LLM Round 2：拿到 Redis 后给最终结论 + 修复建议\n\n调用要求:\n- 通过 HTTP `X-Gateway-Context` 头传递 Gateway Context\n- 必填: phone (11 位)、send_time (YYYY-MM-DD HH:MM:SS)\n- 可选: time_window_seconds (默认 60)、gw_code (10301/11301/22301)、question (运营原始问话，用于反事实诊断：为什么没走到/没补发到某产品)\n\n📦 输出格式：工具直接返回格式化文本报告，**原文转发给运营即可，禁止摘要或改写**。\n报告中【根本原因】段落包含逐产品排除明细（GB:0017 时尤为重要），必须完整展示。\n\n示例响应:\n{\n  \"trace_id\": \"trace-demo-001\",\n  \"phone\": \"13800138000\",\n  \"send_time\": \"2026-04-25 14:30:12\",\n  \"diagnosis\": {\n    \"summary\": \"账号 demo_account 的移动号段未配置通道组，SelectChannel 第一步直接返回\",\n    \"root_cause\": \"account_info.YDCHANNELGROUP 为空且 ISWHITECHANNELGROUP=0，通道组 4 个来源（默认/白名单/关键字转发/转发）全部 miss\",\n    \"category\": \"channel_dispatch\",\n    \"error_code\": \"GB:0017\",\n    \"error_label\": \"未找到可支持的通道\",\n    \"recommended_action\": \"登录平台 → 账号管理 → demo_account → 编辑 → 移动通道组\",\n    \"confidence\": \"high\"\n  },\n  \"evidence\": {\n    \"found_in_hologres\": true,\n    \"sms_record\": {\n      \"account\": \"demo_account\",\n      \"request_code\": \"GB:0017\"\n    },\n    \"lifecycle_summary\": {\n      \"stage_3_dispatch\": [\n        \"[14:30:12.127] 默认通道组: YDCHANNELGROUP = (空)\"\n      ],\n      \"total_lines\": 35,\n      \"truncated\": false\n    },\n    \"redis_lookups\": [\n      {\n        \"cache_name\": \"account_info\",\n        \"key\": \"account_acc007\",\n        \"field\": \"YDCHANNELGROUP\",\n        \"value\": \"\",\n        \"found\": true\n      }\n    ],\n    \"hit_steps\": [\n      {\n        \"step_no\": 14,\n        \"step_name\": \"通道组与通道选择\",\n        \"matched_keywords\": [\n          \"ChannelSelect|\"\n        ]\n      }\n    ]\n  },\n  \"meta\": {\n    \"llm_rounds\": 2,\n    \"tier_used\": 3,\n    \"redis_lookup_count\": 5\n  }\n}",
+    "inputSchema": {
+      "type": "object",
+      "required": [
+        "phone",
+        "send_time"
+      ],
+      "properties": {
+        "phone": {
+          "type": "string",
+          "pattern": "^\\d{11}$",
+          "description": "手机号 (11 位)"
+        },
+        "gw_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "网关编码 (10301/11301/22301)，加速定位"
+        },
+        "question": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "运营原始问话，用于识别目标产品 / 补发意图；不传则按纯事实诊断"
+        },
+        "send_time": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$",
+          "description": "发送时间，YYYY-MM-DD HH:MM:SS"
+        },
+        "include_loki": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否拉 Loki 详细日志"
+        },
+        "time_window_seconds": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "日志/记录查询窗口前后秒数，默认 60"
+        },
+        "include_redis_config": {
+          "type": "boolean",
+          "default": true,
+          "description": "是否做 Redis 富化"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "ops__extract_sms_landing_elements",
+    "description": "⚠️ 适用场景严格限定：仅用于从已发送短信的正文中提取「引流要素」（手机号、长/短链接、主域名、座机、400 电话），用于风控与合规审查。\n\n❌ 不适用场景（请改用 datacenter__query_sms_analytics / datacenter__query_sms_records）：\n- 查「某账号/全平台今天的短信发送量、成功数、失败率」→ datacenter__query_sms_analytics\n- 查「某手机号今天的短信发送状态、发送明细、失败原因」→ datacenter__query_sms_records\n- 任何「发送量 / 发送状态 / 发送明细 / 到达率」类查询\n本工具返回的 count 是「按引流要素分组后的条数」，不是发送量；\n且仅覆盖 content 中含引流要素的短信子集，绝不可当作发送量口径使用。\n\n典型使用：按时间、签名、账号、网络、报告码、产品编码、通道编码筛选，自动从 content 中\n提取手机号、长链接/短域名/主域名、座机、400 电话，并按\n(账号 + 签名 + 短域名 + 主域名 + 手机号 + 座机 + 400 电话) 分组聚合，\n返回数量与发送成功数。\n\n调用要求:\n- 通过 HTTP `X-Gateway-Context` 头传递 Gateway Context\n- 传参 start_date/end_date（必填，格式 YYYY-MM-DD）与 signs（推荐）\n\n返回内容及交付步骤（Agent 必须按此执行）：\n工具返回文字摘要和一个 Excel 下载链接（OSS 预签名 URL）。\n拿到链接后，必须完成以下步骤，不得直接把链接发给用户：\n1. HTTP GET 下载该链接的文件内容（得到 xlsx 二进制）\n2. 调用飞书上传文件接口（POST /open-apis/im/v1/files，file_type=xlsx）上传文件，获取 file_key\n3. 在当前飞书对话中发送文件消息（message_type=file，body.file_key=上一步的 file_key）\n4. 最后用文字告知用户：共导出多少条记录、文件已发送",
+    "inputSchema": {
+      "type": "object",
+      "required": [
+        "start_date",
+        "end_date"
+      ],
+      "properties": {
+        "limit": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "返回行数上限，默认取服务端配置"
+        },
+        "signs": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "签名列表，如 ['【度小满】']"
+        },
+        "network": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "网络类型，如 CTCC/CUCC/CMCC"
+        },
+        "accounts": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "账号列表，可选"
+        },
+        "end_date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "结束日期 YYYY-MM-DD（含当天）"
+        },
+        "platform": {
+          "type": "string",
+          "default": "ShangHai",
+          "minLength": 1,
+          "description": "平台，默认 ShangHai"
+        },
+        "start_date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "起始日期 YYYY-MM-DD"
+        },
+        "report_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "报告码，如 GB:0017"
+        },
+        "channel_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "通道编码，可选"
+        },
+        "product_code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "产品编码，可选"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+]
