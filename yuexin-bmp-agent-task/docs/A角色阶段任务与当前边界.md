@@ -38,13 +38,17 @@
 
 例外依据：用户明确指定使用本次实际取到数据的网关方式，覆盖文档原 LiteLLM 入口约定。本地 OAuth 账号成功不代表公司云端身份已验收。
 
-## A4：通知临时契约
+## A4：真实调用现有 Notice
 
-已有：持久化假定成功占位、唯一槽位/内容绑定与权限检查。无真实发送；assumedSuccess=true、messageId=null、readbackConfirmed=false。
+最新用户指令：真实发送，并选择调用现有 Notice、接受卡片格式调整。已将 task 的占位发送替换为现有 FeishuNoticeService.sendCardMessage 调用，BI/Notice 均不改。
 
-待完成：B 识别并记录占位语义，临时联调不等待 VERIFIED；真实发送/可靠账本/回读按用户此前要求暂缓。
+已有：Card 2.0 业务文字转换到 Notice Message，图表改为注明非金额的日期/趋势指数；独立真实提交记录、唯一槽位、内容绑定、未知结果不自动重发；Python 显式 --accept-notice-queue 接受 Notice 入队但不伪称回读成功。
 
-冲突：原文档要求在 Notice 新增接口，而用户明确禁止修改 Notice。不得移植成未经确认的另一套正式通知服务，不将占位成功视为文档规定的正式投递成功。
+真实联调：开发 Notice 已实际接收一条给本次授权账号的合成测试提交，返回 QUEUED；用户反馈未收到。网关记录中的 user_id 未核实即用作收件人，是一次错误映射，已停止重发。随后用本人提供的手机号、企业邮箱查询开发 Notice 应用，两应用均未返回对应飞书 user_id，需管理员核对通讯录可见范围/租户与收件人标识。不能把 QUEUED 当作已送达。
+
+待完成：取得经确认的飞书 user_id 并配置白名单；确认 Notice 应用范围；完成用户实际收到测试消息的验收。详见 [真实 Notice 接入](A4-真实Notice接入.md)。
+
+文档差异：本轮只有 Notice 队列接收证据，不实现其缺失的可靠账本、消息 ID 和回读；Python 保存 NOTICE_ACCEPTED_UNCONFIRMED，不伪造 VERIFIED。旧占位记录保留且不会自动补发。
 
 ## A5：测试环境部署
 

@@ -48,6 +48,7 @@ class WorkflowTest(unittest.TestCase):
             status,envelope=original(path,body,headers)
             if status==200 and path in (BASE+'/deliveries',BASE+'/deliveries/query'):
                 envelope['data'].update(state='QUEUED',noticeAccepted=True,sendAttempted=True,
+                                        noticeApp='BusinessAlarm',transport='NOTICE_DUBBO',
                                         assumedSuccess=False,deliveryMode='NOTICE_QUEUE',
                                         messageId=None,readbackConfirmed=False)
             return status,envelope

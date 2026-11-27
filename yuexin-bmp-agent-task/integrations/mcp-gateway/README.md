@@ -32,21 +32,17 @@ export PROFIT_SOURCE_MCP_URL=http://106.14.207.126:8000
 
 固定查询：Pigeon，北京时间全天，按 enterprise_id/account_id/send_channel_id 分组。上游文本 JSON 中的小数先解析为十进制字符串；不改金额口径。错误/截断/字段缺失不补零；成功回执重复请求复用，跨实例最多三次来源尝试。AUTH 失效需重新授权；不会回落个人 CLI 或旧 LiteLLM 入口。
 
-## 飞书临时约定
+## 飞书接入（已更新）
 
-用户明确要求暂缓未实现接口，默认成功。本版 `/deliveries`、`/deliveries/query`、`/deliveries/readback` 保留 HTTP 路径，但以 task 内持久化占位记录响应，不调用不存在的 ReliableFeishuNoticeService，也不真实发送飞书消息。
+已按用户最新选择改为真实调用现有 Notice，接受卡片格式转换。新提交不再走 ASSUMED_SUCCESS_NO_SEND。正常返回为 QUEUED / NOTICE_QUEUE，只证明 Notice 入队，不证明飞书实际送达，且无 messageId/回读。
 
-返回 `state=SENT`（兼容旧结构）、`assumedSuccess=true`、`deliveryMode=ASSUMED_SUCCESS_NO_SEND`、`messageId=null`、`readbackConfirmed=false`。这里 SENT 仅为本轮假定成功，不能作为真实投递证据；回读不会返回 VERIFIED。调用方应以 assumedSuccess 完成本轮开发流程，保留该标记，不能混入真实投递验收。
-
-保留按数据日/模式/收件人的唯一槽位、内容绑定、权限隔离和重复请求复用。占位表 profit_assumed_delivery 与未来可靠账本分离；未来真实发送须显式迁移，不能把占位记录当成已发记录，也不能自动补发历史日。
-
-B 对接：国际 receipt 格式保持不变，meta.transport 变为 YUEXIN_GATEWAY_OAUTH，tool 变为 billing_mcp__query_daily_stats_summary。发送阶段识别 assumedSuccess，不再等待 VERIFIED；不得为通过旧校验伪造 ID、回读或正式成功证据。原生产校验仍保留，当前版本并不表示具备正式通知能力。
+Python 使用 --accept-notice-queue，保存真实发送尝试与 NOTICE_ACCEPTED_UNCONFIRMED。--assume-notice-success 仅保留旧占位兼容，不能用于新真实发送。详情及联调缺口见 [A4 真实 Notice 接入](../../docs/A4-真实Notice接入.md)。
 
 ## 国内及其他 A 职责
 
 国内冻结回执、分页、上海日期边界和 HMAC 认证沿用已有实现。真实 BI 调用所需注册中心、授权客户 ID/企业名称映射、字段等价性及稳定读取窗口仍须在公司环境核对；确认前返回 MAPPING_UNCONFIRMED。不得为了跑通而打开未经确认的开关。
 
-数据库启动自动应用 V3 占位表迁移。回退代码应保留该表及现有来源回执/预算，不删除记录。公司环境 BI、MCP 身份、服务部署与 B 联调属于仍需真实环境完成的交付项。
+数据库启动自动应用来源及通知迁移，真实提交使用 V5 的 profit_real_delivery 表。回退代码应保留该表及现有来源回执/预算，不删除记录。公司环境 BI、MCP 身份、服务部署与 B 联调属于仍需真实环境完成的交付项。
 
 ## 本轮验证
 
