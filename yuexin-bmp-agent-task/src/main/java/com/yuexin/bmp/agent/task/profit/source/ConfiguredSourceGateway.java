@@ -1,9 +1,6 @@
 package com.yuexin.bmp.agent.task.profit.source;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
-import org.springframework.http.*;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import java.util.*;
 @Component
 public class ConfiguredSourceGateway implements ProfitSourceGateway {
@@ -11,17 +8,31 @@ public class ConfiguredSourceGateway implements ProfitSourceGateway {
  public ConfiguredSourceGateway(SourceProperties p,ObjectMapper m){this.p=p;mapper=m;}
  @SuppressWarnings("unchecked") public synchronized Map<String,Object> domesticPage(Map<String,Object> params){
   try {
-   if(p.getDubboRegistry().isEmpty())throw new SourceException("SOURCE_UNAVAILABLE",503,false);
+   if(p.getDubboRegistry().isEmpty()&&p.getDubboUrl().isEmpty())throw new SourceException("SOURCE_UNAVAILABLE",503,false);
    if(service==null){
     Class<?> rc=Class.forName("org.apache.dubbo.config.ReferenceConfig");reference=rc.newInstance();
     rc.getMethod("setInterface",String.class).invoke(reference,"com.yuexin.bmp.bi.service.CustomerProfitReportService");rc.getMethod("setGeneric",String.class).invoke(reference,"true");
     Class<?> ac=Class.forName("org.apache.dubbo.config.ApplicationConfig");Object app=ac.getConstructor(String.class).newInstance("profit-alert-source");rc.getMethod("setApplication",ac).invoke(reference,app);
-    Class<?> reg=Class.forName("org.apache.dubbo.config.RegistryConfig");rc.getMethod("setRegistry",reg).invoke(reference,reg.getConstructor(String.class).newInstance(p.getDubboRegistry()));
+    if(!p.getDubboUrl().isEmpty()){if(!p.getDubboUrl().startsWith("dubbo://"))throw new SourceException("SOURCE_UNAVAILABLE",503,false);rc.getMethod("setUrl",String.class).invoke(reference,p.getDubboUrl());}
+    else{Class<?> reg=Class.forName("org.apache.dubbo.config.RegistryConfig");rc.getMethod("setRegistry",reg).invoke(reference,reg.getConstructor(String.class).newInstance(p.getDubboRegistry()));}
     rc.getMethod("setRetries",Integer.class).invoke(reference,0);rc.getMethod("setTimeout",Integer.class).invoke(reference,120000);
     if(!p.getDubboVersion().isEmpty())rc.getMethod("setVersion",String.class).invoke(reference,p.getDubboVersion());if(!p.getDubboGroup().isEmpty())rc.getMethod("setGroup",String.class).invoke(reference,p.getDubboGroup());service=rc.getMethod("get").invoke(reference);
    }
    return (Map<String,Object>)Class.forName("org.apache.dubbo.rpc.service.GenericService").getMethod("$invoke",String.class,String[].class,Object[].class).invoke(service,"query",new String[]{"com.yuexin.bmp.bi.service.CustomerProfitReportService$QueryParams"},new Object[]{params});
-  }catch(SourceException e){throw e;}catch(Exception e){throw new SourceException("SOURCE_UNAVAILABLE",503,true);}
+  }catch(SourceException e){throw e;}catch(Exception e){throw domesticFailure(e);}
+ }
+ // A schema mismatch cannot recover by repeating the same read request.
+ static SourceException domesticFailure(Throwable cause){
+  Set<Throwable> seen=Collections.newSetFromMap(new IdentityHashMap<Throwable,Boolean>());
+  for(Throwable current=cause;current!=null&&seen.add(current);current=current.getCause()){
+   String text=String.valueOf(current.getMessage());
+   if(text.contains("Unknown column")||text.contains("SQLSyntaxErrorException")){
+    SourceException failure=new SourceException("MAPPING_UNCONFIRMED",422,false);
+    failure.initCause(cause);return failure;
+   }
+  }
+  SourceException failure=new SourceException("SOURCE_UNAVAILABLE",503,true);
+  failure.initCause(cause);return failure;
  }
  public synchronized Map<String,Object> internationalDay(String day){
   String python=System.getenv("PROFIT_MCP_PYTHON"), bridge=System.getenv("PROFIT_MCP_BRIDGE");

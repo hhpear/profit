@@ -4,6 +4,10 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 @Component @ConfigurationProperties("profit.source")
 public class SourceProperties {
+ private String dubboUrl="";
+ public String getDubboUrl(){return dubboUrl;}public void setDubboUrl(String value){dubboUrl=value;}
+ private int maxDomesticRows=100000;
+ public int getMaxDomesticRows(){return maxDomesticRows;}public void setMaxDomesticRows(int value){maxDomesticRows=value;}
  private boolean mappingConfirmed,stableReadConfirmed; private String mcpUrl="http://106.14.207.126:8000",mcpToken="",dubboRegistry="",dubboVersion="",dubboGroup="";
  private List<Long> customerIds=new ArrayList<>(); private Map<String,String> enterpriseNames=new HashMap<>();
  public boolean isMappingConfirmed(){return mappingConfirmed;} public void setMappingConfirmed(boolean x){mappingConfirmed=x;}

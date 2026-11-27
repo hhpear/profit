@@ -50,7 +50,7 @@ class PythonHttpContractTest {
    public Map<String,Object> domesticPage(Map<String,Object> params){
     List<Map<String,Object>> rows=new ArrayList<>();
     long from=((Number)params.get("startTime")).longValue(), until=((Number)params.get("endTime")).longValue();
-    for(long day=from;day<until;day+=86400000L)for(int i=1;i<=2;i++){Map<String,Object> row=new HashMap<>();row.put("id",day+i);row.put("time",day);row.put("entCode","E"+i);row.put("smsIncome","100.00");row.put("smsOperateProfit","20.00");rows.add(row);}
+    for(long day=from;day<until;day+=86400000L)for(int i=1;i<=2;i++){Map<String,Object> row=new HashMap<>();row.put("id",day+i);row.put("customerId",1L);row.put("time",day);row.put("entCode","E"+i);row.put("smsIncome","100.00");row.put("smsOperateProfit","20.00");rows.add(row);}
     Map<String,Object> result=new HashMap<>();result.put("data",rows);result.put("totalCount",rows.size());return result;
    }
    public Map<String,Object> internationalDay(String day){
